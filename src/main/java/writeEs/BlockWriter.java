@@ -58,6 +58,9 @@ public class BlockWriter {
 		putBlockMark(esClient, blockMark, br);
 		BulkResponse response = EsTools.bulkWithBuilder(esClient, br);
 		
+		System.out.println("Main chain linked. Orphan: "+Preparer.orphanList.size()+" Fork: "+Preparer.forkList.size()+" BlockId: "+blockMark.getId()+" Height: "+blockMark.getHeight());
+
+		
 		response.items().iterator();
 
 		if (response.errors()) {

@@ -51,7 +51,7 @@ public class BlockMaker {
 	}
 
 	private ReadyBlock makeInputList(ElasticsearchClient esClient, ReadyBlock rawBlock) throws Exception {
-		// TODO Auto-generated method stub
+
 		ReadyBlock inListMadeBlock = rawBlock;
 
 		ArrayList<Txo> inList = inListMadeBlock.getInList();
@@ -113,35 +113,6 @@ public class BlockMaker {
 			outWriteList.add(outMap.get(id));
 		}
 
-		/*
-		 * 
-		 * for(String id : inNewIdList) { boolean found = false;
-		 * 
-		 * Iterator<Txo> iterIn = inList.iterator(); while(iterIn.hasNext()) { Txo in =
-		 * iterIn.next(); if(id.equals(in.getId())) {
-		 * 
-		 * Iterator<Txo> iterOut = outList.iterator(); while(iterOut.hasNext()) { Txo
-		 * out = iterOut.next(); if(id.equals(out.getId())){
-		 * in.setOutIndex(out.getOutIndex()); in.setType(out.getType());
-		 * in.setValue(out.getValue()); in.setLockScript(out.getLockScript());
-		 * in.setTxId(out.getTxId()); in.setTxIndex(out.getTxIndex());
-		 * in.setBirthTime(out.getBirthTime()); in.setBirthHeight(out.getBirthHeight());
-		 * in.setCdd(FchTools.cdd(in.getValue(), in.getBirthTime(), in.getSpentTime()));
-		 * 
-		 * inMadeList.add(in); iterOut.remove(); found = true; break; } }
-		 * if(found)break; } } }
-		 * 
-		 * for(Txo in: inList) { for(Txo inOld: inOldList) {
-		 * if(in.getId().equals(inOld.getId())) { in.setOutIndex(inOld.getOutIndex());
-		 * in.setType(inOld.getType()); in.setValue(inOld.getValue());
-		 * in.setLockScript(inOld.getLockScript()); in.setTxId(inOld.getTxId());
-		 * in.setBirthTime(inOld.getBirthTime());
-		 * in.setBirthHeight(inOld.getBirthHeight());
-		 * in.setCdd(FchTools.cdd(in.getValue(), in.getBirthTime(), in.getSpentTime()));
-		 * 
-		 * inMadeList.add(in); break; } } }
-		 */
-
 		inListMadeBlock.setInList(inMadeList);
 		inListMadeBlock.setOutWriteList(outWriteList);
 		inListMadeBlock.setOutList(outList);
@@ -156,14 +127,13 @@ public class BlockMaker {
 
 		Map<String, Tx> txMap = new HashMap<String, Tx>();
 		Map<String, TxHas> txHasMap = new HashMap<String, TxHas>();
-		
 
 		for (Tx tx : txList) {
 			txMap.put(tx.getId(), tx);
 
 			TxHas txHas = new TxHas();
-			ArrayList<TxoMark> inMarks = new  ArrayList<TxoMark>();
-			ArrayList<TxoMark> outMarks = new  ArrayList<TxoMark>();
+			ArrayList<TxoMark> inMarks = new ArrayList<TxoMark>();
+			ArrayList<TxoMark> outMarks = new ArrayList<TxoMark>();
 			txHas.setId(tx.getId());
 			txHas.setHeight(tx.getHeight());
 			txHas.setInMarks(inMarks);
@@ -186,8 +156,7 @@ public class BlockMaker {
 				inMark.setAddr(in.getAddr());
 				inMark.setValue(in.getValue());
 				inMark.setCdd(in.getCdd());
-				inMark.setIndex(in.getSpentIndex());
-				
+
 				txHas.getInMarks().add(inMark);
 			}
 
@@ -202,20 +171,18 @@ public class BlockMaker {
 			outMark.setId(out.getId());
 			outMark.setAddr(out.getAddr());
 			outMark.setValue(out.getValue());
-			outMark.setIndex(out.getOutIndex());
 
 			txHas.getOutMarks().add(outMark);
 		}
-		
 
-		if(opList!=null && !opList.isEmpty())
+		if (opList != null && !opList.isEmpty())
 			for (OpReturn opReturn : opList) {
 				String txId = opReturn.getId();
-	
+
 				opReturn.setCdd(txMap.get(txId).getCdd());
 				String signer = txHasMap.get(txId).getInMarks().get(0).getAddr();
 				opReturn.setSigner(signer);
-	
+
 				for (TxoMark txoB : txHasMap.get(txId).getOutMarks()) {
 					String addr = txoB.getAddr();
 					if (!addr.equals(signer) && !addr.equals("unknown") && addr.equals("OpReturn")) {
@@ -223,23 +190,23 @@ public class BlockMaker {
 						break;
 					}
 				}
-				if(opReturn.getRecipient() == null)opReturn.setRecipient("nobody");
+				if (opReturn.getRecipient() == null)
+					opReturn.setRecipient("nobody");
 			}
 
-		Set<String> txIdSet = txMap.keySet();
+		Iterator<Tx> iterTx = txList.iterator();
 		ArrayList<Tx> txGoodList = new ArrayList<Tx>();
-		Iterator<String> itertx = txIdSet.iterator();
-		while (itertx.hasNext()) {
-			Tx tx = txMap.get(itertx.next());
-			if(tx.getInCount()!=0)
-				tx.setFee(tx.getInValueT()-tx.getOutValueT());
+		while (iterTx.hasNext()) {
+			Tx tx = txMap.get(iterTx.next().getId());
+			if (tx.getInCount() != 0)
+				tx.setFee(tx.getInValueT() - tx.getOutValueT());
 			txGoodList.add(tx);
 		}
 
 		ArrayList<TxHas> txHasGoodList = new ArrayList<TxHas>();
-		Iterator<String> itertxhas = txIdSet.iterator();
+		Iterator<Tx> itertxhas = txList.iterator();
 		while (itertxhas.hasNext()) {
-			txHasGoodList.add(txHasMap.get(itertxhas.next()));
+			txHasGoodList.add(txHasMap.get(itertxhas.next().getId()));
 		}
 
 		ReadyBlock txAndTxHasMadeBlock = blockForMaking;
@@ -252,7 +219,7 @@ public class BlockMaker {
 	}
 
 	private ReadyBlock makeBlockBlockHas(ReadyBlock txAndTxHasMadeBlock) {
-		// TODO Auto-generated method stub
+
 		ArrayList<Tx> txList = txAndTxHasMadeBlock.getTxList();
 		Block block = txAndTxHasMadeBlock.getBlock();
 		BlockHas blockHas = new BlockHas();
@@ -263,13 +230,12 @@ public class BlockMaker {
 		for (Tx tx : txList) {
 			block.setInValueT(block.getInValueT() + tx.getInValueT());
 			block.setOutValueT(block.getOutValueT() + tx.getOutValueT());
-			block.setFee(block.getFee()+tx.getFee());
-			block.setCdd(block.getCdd()+tx.getCdd());
+			block.setFee(block.getFee() + tx.getFee());
+			block.setCdd(block.getCdd() + tx.getCdd());
 
 			TxMark txMark = new TxMark();
 			txMark.setId(tx.getId());
 			txMark.setOutValue(tx.getOutValueT());
-			txMark.setIndex(tx.getTxIndex());
 
 			if (tx.getInCount() != 0) {
 				long fee = tx.getFee();
@@ -288,7 +254,7 @@ public class BlockMaker {
 	}
 
 	private ReadyBlock makeAddress(ElasticsearchClient esClient, ReadyBlock readyBlock) throws Exception {
-		// TODO Auto-generated method stub
+
 		List<String> addrStrList = getAddrStrList(readyBlock);
 		ArrayList<Address> addrList = readAddrListFromEs(esClient, addrStrList);
 
@@ -364,7 +330,7 @@ public class BlockMaker {
 	}
 
 	private List<String> getAddrStrList(ReadyBlock readyBlock) {
-		// TODO Auto-generated method stub
+
 		ArrayList<Txo> inList = readyBlock.getInList();
 		ArrayList<Txo> outList = readyBlock.getOutList();
 
@@ -382,7 +348,7 @@ public class BlockMaker {
 
 	private ArrayList<Address> readAddrListFromEs(ElasticsearchClient esClient, List<String> addrStrList)
 			throws Exception {
-		// TODO Auto-generated method stub
+
 		MgetResult<Address> addrMgetResult = EsTools.getMultiByIdList(esClient, Indices.AddressIndex, addrStrList,
 				Address.class);
 
@@ -404,7 +370,7 @@ public class BlockMaker {
 	}
 
 	private Address setPKAndMoreAddrs(Address addr1, String unLockScript) {
-		// TODO Auto-generated method stub
+
 		Address addr = addr1;
 		String pk = FchTools.parsePkFromUnlockScript(unLockScript);
 		addr.setPubkey(pk);

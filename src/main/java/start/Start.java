@@ -122,6 +122,7 @@ public class Start {
 					System.out.println("\nInput the number of the height:");
 					sc.next();
 				}	
+				pathAndHeight.setPath(config.getPath());
 				pathAndHeight.setBestHeight(sc.nextLong());
 				new Preparer().prepare(esClient,pathAndHeight);
 				break;

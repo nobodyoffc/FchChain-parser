@@ -26,7 +26,7 @@ The project of FreeChain is wrote with Java.
 ## Install
 
 If you want run FreeChain to establish your own database service, you need install it as following.
-If you just need query information of FreeChain, you need't install it. You should find a service provider, get an account, and query as showed in [Query Freecash Blockchain](query-Freecash-Blockchain) .
+If you just need query information of FreeChain, you need't install it. You should find a service provider, get an account, and query as showed in [Query Freecash Blockchain](query-freecash-blockchain) .
 1. Install freecash full node and synchronize all blocks
 * Download freecash full node
 * The path of block files
@@ -37,3 +37,5 @@ If you just need query information of FreeChain, you need't install it. You shou
 ## Parse Freecash Blockchain
 ## ES Indices
 ## Query Freecash Blockchain
+
+by No1_NrC7

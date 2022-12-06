@@ -13,9 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.BulkRequest.Builder;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
 import data.BlockMark;
 import esClient.Indices;
 import tools.BytesTools;
@@ -42,7 +41,6 @@ public class MainParser {
 	
 	public int startParse(ElasticsearchClient esClient) throws Exception {
 		
-
 		System.out.println("Started parsing file:  "+Preparer.CurrentFile+" ...");
 		log.info("Started parsing file: {} ...",Preparer.CurrentFile);
 		
@@ -101,9 +99,10 @@ public class MainParser {
 				
 			}else {
 				
-				//TODO Could be optimized. 
-				linkToChain(esClient, blockMark,blockBytes);			
+				linkToChain(esClient, blockMark,blockBytes);	
+				
 				recheckOrphans(esClient);
+				
 				Preparer.Pointer += blockLength;
 			}
 			
@@ -130,7 +129,6 @@ public class MainParser {
 	}
 
 	private CheckResult checkBlock(FileInputStream fis) throws Exception {
-		// TODO Auto-generated method stub
 		
 		BlockMark blockMark = new BlockMark();	
 		blockMark.set_pointer(Preparer.Pointer);
@@ -164,7 +162,6 @@ public class MainParser {
 		int blockSize = (int) BytesTools.bytes4ToLongLE(b4);
 		blockMark.setSize(blockSize);
 		
-		//TODO unchecked
 		if(blockSize==0) {
 			checkResult.setBlockLength(WAIT_MORE); 
 			return checkResult;
@@ -207,9 +204,6 @@ public class MainParser {
 			checkResult.setBlockLength(HEADER_FORK);
 			return checkResult;
 		}
-		
-		//TODO
-		System.out.println("BlockMark checked. Pointer: "+Preparer.Pointer+" BlockId: "+blockMark.getId());
 		checkResult.setBlockLength(blockSize+8);
 		checkResult.setBlockMark(blockMark);
 		checkResult.setBlockBytes(blockBytes);
@@ -242,40 +236,39 @@ public class MainParser {
 		}
 	}
 	
-	private boolean linkToChain(ElasticsearchClient esClient, BlockMark blockMark1, byte[] blockBytes) throws Exception {
+	private void linkToChain(ElasticsearchClient esClient, BlockMark blockMark1, byte[] blockBytes) throws Exception {
 		BlockMark blockMark = blockMark1;
-		BulkRequest.Builder br = new BulkRequest.Builder();
 		
 		if(isRepeatBlcokIgnore(blockMark)) 
-			return false;
-		if(isLinkToMainChainWriteItToEs(esClient, blockMark, blockBytes,br))
-			return true; 	
-		if(isNewForkAddIt(blockMark,br)) 
-			return false;
-		if(isLinkedToForkAddIt(blockMark,br)){
+			return;
+		if(isLinkToMainChainWriteItToEs(esClient, blockMark, blockBytes))
+			return; 	
+		if(isNewForkAddMarkToEs(esClient, blockMark)) 
+			return;
+		if(isLinkedToForkWriteMarkToEs(esClient, blockMark)){
 			if(isForkOverMain(blockMark)) {
-				ArrayList<BlockMark> winList = findBlockForkAfter(blockMark);
-				reorganize(esClient,winList,br);
+				ArrayList<BlockMark> winList = findTheBlockBeforeFork(blockMark);
+				reorganize(esClient,winList);
 			}
-			return true;
+			return;
 		}
-		writeOrphanMark(blockMark,br);
-		
-		br.timeout(t->t.time("600s"));			
-		BulkResponse response = esClient.bulk(br.build());
-		if(response.errors())throw new Exception("Bulk operateing ES wrong.");
-		return false; 
+		writeOrphanMark(esClient, blockMark);
+		return; 
 	}
-	private void reorganize(ElasticsearchClient esClient, ArrayList<BlockMark> winList, Builder br) throws Exception {
-		// TODO Auto-generated method stub
+	private void writeBlockMark(ElasticsearchClient esClient,BlockMark blockMark) throws ElasticsearchException, IOException {
+		esClient.index(i->i.index(Indices.BlockMarkIndex).id(blockMark.getId()).document(blockMark));
+	}	
+	private void reorganize(ElasticsearchClient esClient, ArrayList<BlockMark> winList) throws Exception {
+
 		if(winList == null || winList.isEmpty()) return;
-			BlockMark blockMarkForkAfter = winList.get(winList.size()-1);
-			mainToFork(blockMarkForkAfter,br);
-			new RollBacker().rollback(esClient,blockMarkForkAfter.getHeight());
-			writeWinListToEs(esClient,winList,br);
+			BlockMark blockMarkBeforeFork = winList.get(winList.size()-1);
+			mainToFork(esClient, blockMarkBeforeFork);
+			new RollBacker().rollback(esClient,blockMarkBeforeFork.getHeight());
+			writeWinListToEs(esClient,winList);
+			System.out.println("Reorganized. Fork: "+Preparer.forkList.size()+"BlockId before fork: "+blockMarkBeforeFork.getId()+" Height: "+blockMarkBeforeFork.getHeight());
 	}
 	private boolean isRepeatBlcokIgnore(BlockMark blockMark) {
-		// TODO Auto-generated method stub
+
 		if(Preparer.mainList==null || Preparer.mainList.isEmpty())return false;
 		Iterator<BlockMark> iter = Preparer.mainList.iterator();
 		while(iter.hasNext()) {
@@ -285,8 +278,8 @@ public class MainParser {
 		}
 		return false;
 	}
-	private boolean isLinkToMainChainWriteItToEs(ElasticsearchClient esClient, BlockMark blockMark1, byte[] blockBytes, Builder br) throws Exception {
-		// TODO Auto-generated method stub
+	private boolean isLinkToMainChainWriteItToEs(ElasticsearchClient esClient, BlockMark blockMark1, byte[] blockBytes) throws Exception {
+
 		BlockMark blockMark = blockMark1;
 		
 		if(blockMark.getPreId().equals(Preparer.BestHash)){
@@ -302,7 +295,7 @@ public class MainParser {
 		return false;
 	}
 	private void dropOldFork(long newHeight) {
-		// TODO Auto-generated method stub
+
 		Iterator<BlockMark> iter = Preparer.forkList.iterator();
 		while(iter.hasNext()) {
 			BlockMark bm = iter.next();
@@ -312,8 +305,8 @@ public class MainParser {
 		}
 	}
 
-	private boolean isNewForkAddIt(BlockMark blockMark1, Builder br) {
-		// TODO Auto-generated method stub
+	private boolean isNewForkAddMarkToEs(ElasticsearchClient esClient,BlockMark blockMark1) throws ElasticsearchException, IOException {
+
 		BlockMark blockMark = blockMark1;
 		Iterator<BlockMark> iter = Preparer.mainList.iterator();
 		while(iter.hasNext()) {
@@ -321,18 +314,15 @@ public class MainParser {
 			if(blockMark.getPreId().equals(bm.getId())){
 				blockMark.setHeight(bm.getHeight()+1);
 				blockMark.setStatus(Preparer.FORK);
+				writeBlockMark(esClient, blockMark);
 				Preparer.forkList.add(blockMark);
-				br.operations(op->op.index(in->in
-						.index(Indices.BlockMarkIndex)
-						.id(blockMark.getId())
-						.document(blockMark)));
 				return true;
 			}
 		}
 		return false;
 	}
-	private boolean isLinkedToForkAddIt(BlockMark blockMark1, Builder br) {
-		// TODO Auto-generated method stub
+	private boolean isLinkedToForkWriteMarkToEs(ElasticsearchClient esClient,BlockMark blockMark1) throws ElasticsearchException, IOException {
+
 		BlockMark blockMark = blockMark1;
 		Iterator<BlockMark> iter = Preparer.forkList.iterator();
 		while(iter.hasNext()) {
@@ -340,11 +330,8 @@ public class MainParser {
 			if(blockMark.getPreId().equals(bm.getId())){
 				blockMark.setHeight(bm.getHeight()+1);
 				blockMark.setStatus(Preparer.FORK);
+				writeBlockMark(esClient, blockMark);
 				Preparer.forkList.add(blockMark);
-				br.operations(op->op.index(in->in
-						.index(Indices.BlockMarkIndex)
-						.id(blockMark.getId())
-						.document(blockMark)));
 				return true;
 			}
 		}
@@ -353,13 +340,13 @@ public class MainParser {
 	}
 
 	private boolean isForkOverMain(BlockMark blockMark) {
-		// TODO Auto-generated method stub
+
 		long bestHeight = Preparer.mainList.get(Preparer.mainList.size()-1).getHeight();
 		if(blockMark.getHeight() > bestHeight) return true;
 		return false;
 	}
-	private ArrayList<BlockMark> findBlockForkAfter(BlockMark blockMark1) {
-		// TODO Auto-generated method stub
+	private ArrayList<BlockMark> findTheBlockBeforeFork(BlockMark blockMark1) {
+
 		BlockMark blockMark = blockMark1;
 		
 		String preId = blockMark.getPreId();
@@ -398,14 +385,18 @@ public class MainParser {
 			}
 		}
 	}
-	private static void mainToFork(BlockMark blockMarkForkAfter, Builder br) throws Exception {
+	private static void mainToFork(ElasticsearchClient esClient,BlockMark blockMarkBeforeFork) throws Exception {
 		// TODO Auto-generated method stub
+		
+		BulkRequest.Builder br = new BulkRequest.Builder();
+		
 		for(int i=Preparer.mainList.size()-1; i>=Preparer.mainList.size()-31; i--) {
 			BlockMark mainBlockMark = Preparer.mainList.get(i);
 			
-			if(blockMarkForkAfter.getId().equals(mainBlockMark.getId()))
+			if(blockMarkBeforeFork.getId().equals(mainBlockMark.getId())) {
+				esClient.bulk(br.build());
 				return;
-			
+			}
 			mainBlockMark.setStatus(Preparer.FORK);
 			br.operations(op->op.index(in->in
 					.index(Indices.BlockMarkIndex)
@@ -414,11 +405,12 @@ public class MainParser {
 			Preparer.forkList.add(mainBlockMark);
 			Preparer.mainList.remove(i);
 		}
+
 		log.error("The fork block is not found in mainBlockMarkList!!!");
 		throw new Exception("The fork block is not found in mainBlockMarkList!!!");
 	}
 
-	private boolean writeWinListToEs(ElasticsearchClient esClient, ArrayList<BlockMark> winList, Builder br) throws Exception {
+	private boolean writeWinListToEs(ElasticsearchClient esClient, ArrayList<BlockMark> winList) throws Exception {
 		// TODO Auto-generated method stub
 		for(int i=winList.size()-2;i>=0;i--) {
 			BlockMark blockMark = winList.get(i);
@@ -431,7 +423,7 @@ public class MainParser {
 		return false;
 	}
 	private byte[] getBlockBytes(BlockMark bm) throws IOException {
-		// TODO Auto-generated method stub	
+		
 		File file = new File(Preparer.Path, FileTools.getFileNameWithOrder(bm.get_fileOrder()));
 		FileInputStream fis = new FileInputStream(file);
 		fis.skip(bm.get_pointer()+8);
@@ -441,20 +433,14 @@ public class MainParser {
 		return blockBytes;
 	}
 
-	private static void writeOrphanMark(BlockMark blockMark, Builder br) {
-		// TODO Auto-generated method stub
+	private void writeOrphanMark(ElasticsearchClient esClient,BlockMark blockMark) throws ElasticsearchException, IOException {
+
 		blockMark.setStatus(Preparer.ORPHAN);
-		br.operations(op->op.index(in->in
-				.index(Indices.BlockMarkIndex)
-				.id(blockMark.getId())
-				.document(blockMark)));	
+		writeBlockMark(esClient, blockMark);
 		Preparer.orphanList.add(blockMark);
 	}
 	private void recheckOrphans(ElasticsearchClient esClient) throws Exception {
-		// TODO Auto-generated method stub
-		BulkRequest.Builder br = new BulkRequest.Builder();
-		//BlockMark bestBlockMark = FilesParser.mainList.get(FilesParser.mainList.size()-1);
-		
+
 		boolean found = false;
 		
 		BlockMark bestBlockMark = new BlockMark();;
@@ -492,8 +478,8 @@ public class MainParser {
 						Preparer.forkList.add(blockMark);
 						Preparer.orphanList.remove(i);
 						if(isForkOverMain(blockMark)) {
-							ArrayList<BlockMark> winList = findBlockForkAfter(blockMark);
-							reorganize(esClient,winList,br);
+							ArrayList<BlockMark> winList = findTheBlockBeforeFork(blockMark);
+							reorganize(esClient,winList);
 						}
 						found = true;
 						break;
