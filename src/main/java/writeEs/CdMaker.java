@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
@@ -18,8 +17,8 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
 import data.Address;
 import esClient.EsTools;
+import esClient.Indices;
 import parse.Preparer;
-import start.Indices;
 
 public class CdMaker {
 
@@ -35,13 +34,12 @@ public class CdMaker {
 					.query(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("utxo").value(true)))
 							.must(m -> m.range(r -> r.field("birthHeight").gte(JsonData.of(fromHeight))
 									.lt(JsonData.of(fromHeight + 5000))))))
-					.sort("height:asc")
+					.sort("birthHeight:asc")
 					.script(s -> s.inline(i1 -> i1.source(
-							"ctx._source.cd = (long)((((long)(params.now - ctx._source.blockTime)/86400)*ctx._source.value)/100000000)")
+							"ctx._source.cd = (long)((((long)(params.now - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
 							.params("now", JsonData.of(now)))));
 			if (fromHeight + 5000 > bestHeight)
 				break;
-			TimeUnit.SECONDS.sleep(3);
 		}
 	}
 

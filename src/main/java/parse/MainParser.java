@@ -17,11 +17,11 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkRequest.Builder;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import data.BlockMark;
-
-import start.Indices;
+import esClient.Indices;
 import tools.BytesTools;
 import tools.FileTools;
 import tools.Hash;
+import tools.OpReFile;
 import writeEs.BlockMaker;
 import writeEs.BlockWriter;
 import writeEs.CdMaker;
@@ -37,6 +37,8 @@ public class MainParser {
 	public static final String MAGIC = "f9beb4d9";
 	
 	private static final Logger log = LoggerFactory.getLogger(MainParser.class);
+	
+	private OpReFile opReFile = new OpReFile();
 	
 	public int startParse(ElasticsearchClient esClient) throws Exception {
 		
@@ -81,6 +83,7 @@ public class MainParser {
 			if(blockLength == WRONG ) {
 				System.out.println("Read Magic wrong. pointer: "+Preparer.Pointer);
 				log.info("Read Magic wrong. pointer: {}",Preparer.Pointer);
+				opReFile.close();
 				return WRONG;
 				
 			}else if(blockLength == HEADER_FORK) {
@@ -292,7 +295,7 @@ public class MainParser {
 			blockMark.setHeight(newHeight);
 			ReadyBlock rawBlock = new BlockParser().parseBlock(blockBytes,blockMark);
 			ReadyBlock readyBlock = new BlockMaker().makeReadyBlock(esClient, rawBlock);
-			new BlockWriter().writeIntoEs(esClient, readyBlock);
+			new BlockWriter().writeIntoEs(esClient, readyBlock,opReFile);
 			dropOldFork(newHeight);
 			return true;
 		}
@@ -422,7 +425,7 @@ public class MainParser {
 			byte[] blockBytes = getBlockBytes(blockMark);
 			ReadyBlock rawBlock = new BlockParser().parseBlock(blockBytes,blockMark);
 			ReadyBlock readyBlock = new BlockMaker().makeReadyBlock(esClient, rawBlock);
-			new BlockWriter().writeIntoEs(esClient, readyBlock);
+			new BlockWriter().writeIntoEs(esClient, readyBlock,opReFile);
 		}
 		dropOldFork(winList.get(0).getHeight());
 		return false;
@@ -468,7 +471,7 @@ public class MainParser {
 					
 					ReadyBlock rawBlock = new BlockParser().parseBlock(blockBytes,blockMark);
 					ReadyBlock readyBlock = new BlockMaker().makeReadyBlock(esClient, rawBlock);
-					new BlockWriter().writeIntoEs(esClient, readyBlock);
+					new BlockWriter().writeIntoEs(esClient, readyBlock,opReFile);
 					
 					bestBlockMark = Preparer.mainList.get(Preparer.mainList.size()-1);
 					

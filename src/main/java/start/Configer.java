@@ -1,4 +1,4 @@
-package esClient;
+package start;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -98,7 +98,7 @@ public class Configer {
 		File file;
 		
 		while(true) {
-			System.out.println("Input the path of freecash block data ending with a '/':");
+			System.out.println("Input the path of freecash block data ending with '/':");
 			configer.setPath(br.readLine());
 	        file = new File(configer.getPath());
 	        if (!file.exists()) {

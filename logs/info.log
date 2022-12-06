@@ -1,0 +1,4 @@
+2022-12-05 18:17:52.830 [main] INFO  start.Start - Start.
+2022-12-05 20:35:48.628 [main] INFO  start.Start - Start.
+2022-12-05 20:35:53.769 [main] INFO  esClient.StartClient - Client has been created: InfoResponse: {"cluster_name":"fcTest","cluster_uuid":"W8JxoBXaStuAyd3VQLMMuQ","name":"macBookPro","tagline":"You Know, for Search","version":{"build_date":"2022-08-26T12:11:43.232597118Z","build_flavor":"default","build_hash":"2bd229c8e56650b42e40992322a76e7914258f0c","build_snapshot":false,"build_type":"tar","lucene_version":"9.3.0","minimum_index_compatibility_version":"7.0.0","minimum_wire_compatibility_version":"7.17.0","number":"8.4.1"}}
+2022-12-05 20:36:25.424 [main] INFO  parse.MainParser - Started parsing file: blk00003.dat ...

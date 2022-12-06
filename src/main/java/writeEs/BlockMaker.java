@@ -20,9 +20,9 @@ import data.TxMark;
 import data.Txo;
 import data.TxoMark;
 import esClient.EsTools;
+import esClient.Indices;
 import esClient.EsTools.MgetResult;
 import parse.ReadyBlock;
-import start.Indices;
 import tools.FchTools;
 
 public class BlockMaker {
@@ -208,23 +208,23 @@ public class BlockMaker {
 		}
 		
 
-
-		for (OpReturn opReturn : opList) {
-			String txId = opReturn.getId();
-
-			opReturn.setCdd(txMap.get(txId).getCdd());
-			String signer = txHasMap.get(txId).getInMarks().get(0).getAddr();
-			opReturn.setSigner(signer);
-
-			for (TxoMark txoB : txHasMap.get(txId).getOutMarks()) {
-				String addr = txoB.getAddr();
-				if (!addr.equals(signer) && !addr.equals("unknown") && addr.equals("OpReturn")) {
-					opReturn.setRecipient(addr);
-					break;
+		if(opList!=null && !opList.isEmpty())
+			for (OpReturn opReturn : opList) {
+				String txId = opReturn.getId();
+	
+				opReturn.setCdd(txMap.get(txId).getCdd());
+				String signer = txHasMap.get(txId).getInMarks().get(0).getAddr();
+				opReturn.setSigner(signer);
+	
+				for (TxoMark txoB : txHasMap.get(txId).getOutMarks()) {
+					String addr = txoB.getAddr();
+					if (!addr.equals(signer) && !addr.equals("unknown") && addr.equals("OpReturn")) {
+						opReturn.setRecipient(addr);
+						break;
+					}
 				}
+				if(opReturn.getRecipient() == null)opReturn.setRecipient("nobody");
 			}
-			if(opReturn.getRecipient() == null)opReturn.setRecipient("nobody");
-		}
 
 		Set<String> txIdSet = txMap.keySet();
 		ArrayList<Tx> txGoodList = new ArrayList<Tx>();
@@ -235,8 +235,6 @@ public class BlockMaker {
 				tx.setFee(tx.getInValueT()-tx.getOutValueT());
 			txGoodList.add(tx);
 		}
-		
-		
 
 		ArrayList<TxHas> txHasGoodList = new ArrayList<TxHas>();
 		Iterator<String> itertxhas = txIdSet.iterator();
@@ -266,6 +264,7 @@ public class BlockMaker {
 			block.setInValueT(block.getInValueT() + tx.getInValueT());
 			block.setOutValueT(block.getOutValueT() + tx.getOutValueT());
 			block.setFee(block.getFee()+tx.getFee());
+			block.setCdd(block.getCdd()+tx.getCdd());
 
 			TxMark txMark = new TxMark();
 			txMark.setId(tx.getId());
@@ -275,6 +274,7 @@ public class BlockMaker {
 			if (tx.getInCount() != 0) {
 				long fee = tx.getFee();
 				txMark.setFee(fee);
+				txMark.setCdd(tx.getCdd());
 			}
 			blockHas.getTxMarks().add(txMark);
 		}

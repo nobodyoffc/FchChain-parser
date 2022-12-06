@@ -21,15 +21,16 @@ import data.Tx;
 import data.TxHas;
 import data.Txo;
 import esClient.EsTools;
+import esClient.Indices;
 import parse.Preparer;
 import parse.ReadyBlock;
-import start.Indices;
+import tools.OpReFile;
 
 public class BlockWriter {
 
 	private static final Logger log = LoggerFactory.getLogger(BlockWriter.class);
 
-	public void writeIntoEs(ElasticsearchClient esClient, ReadyBlock readyBlock1) throws Exception {
+	public void writeIntoEs(ElasticsearchClient esClient, ReadyBlock readyBlock1,OpReFile opReFile) throws Exception {
 		ReadyBlock readyBlock = readyBlock1;	
 
 		Block block = readyBlock.getBlock();
@@ -42,7 +43,7 @@ public class BlockWriter {
 		BlockMark blockMark = readyBlock.getBlockMark();
 		ArrayList<Address> addrList = readyBlock.getAddrList();
 		
-		OpReturn.writeOpReturnListIntoFile(opReturnList);
+		opReFile.writeOpReturnListIntoFile(opReturnList);
 
 
 		Builder br = new BulkRequest.Builder();

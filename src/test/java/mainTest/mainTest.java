@@ -44,16 +44,17 @@ import data.Address;
 import data.BlockMark;
 import data.Txo;
 import esClient.EsTools;
+import esClient.Indices;
 import esClient.EsTools.MgetResult;
 import parse.Preparer;
 import esClient.StartClient;
-import start.Indices;
 import testDataMaker.BlockParts;
 import testDataMaker.DataMaker;
 import tools.BytesTools;
 import tools.FchTools;
 import tools.Hash;
 import tools.ParseTools;
+import writeEs.CdMaker;
 
 public class mainTest {
 	public static final int FILE_END = -1;
@@ -78,21 +79,136 @@ public class mainTest {
 		System.out.println("ES Client was created. The cluster is: " + vb.get(0).cluster());
 		////////////////////
 
-		List<String> idList = new ArrayList<String>();
-		idList.add("FTqiqAyXHnK7uDTXzMap3acvqADK4ZGzts");
-		idList.add("dfalj");
+		long cdMakeTime = System.currentTimeMillis();
+		long now = System.currentTimeMillis();
 
-		MgetResult<Address> result = mgetWithNull(esClient, "address", idList, Address.class);
-
+		if(true) {
+			CdMaker cdMaker = new CdMaker();
+			
+			System.out.println("Make all cd of UTXOs...");
+			log.info("Make all cd of UTXOs...");
+			
+			//TimeUnit.MINUTES.sleep(1);
+			
+			makeUtxoCd(esClient);
+			TimeUnit.MINUTES.sleep(1);
+			
+			System.out.println("Make all cd of Addresses...");
+			log.info("Make all cd of Addresses...");
+			makeAddrCd(esClient);
+			TimeUnit.MINUTES.sleep(1);
+			
+			cdMakeTime = now;
+		}
+		
 		Gson gson = new Gson();
 
-		System.out.println("result:" + gson.toJson(result));
+	//	System.out.println("result:" + gson.toJson(result));
 
 		esClient.shutdown();
 
 	}
 
-	@Test
+	public static void makeUtxoCd(ElasticsearchClient esClient)
+			throws ElasticsearchException, IOException, InterruptedException {
+
+		long now = System.currentTimeMillis() / 1000;
+		long bestHeight = 900000;//Preparer.mainList.get(Preparer.mainList.size() - 1).getHeight();
+
+		for (int i = 0;; i += 5000) {
+			long fromHeight = i;
+			esClient.updateByQuery(u -> u.index(Indices.TxoIndex)
+					.query(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("utxo").value(true)))
+							.must(m -> m.range(r -> r.field("birthHeight").gte(JsonData.of(fromHeight))
+									.lt(JsonData.of(fromHeight + 5000))))))
+					.sort("birthHeight:asc")
+					.script(s -> s.inline(i1 -> i1
+							.source("ctx._source.cd = (long)((((long)(params.now - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
+							.params("now", JsonData.of(now)))));
+			if (fromHeight + 5000 > bestHeight)
+				break;
+			TimeUnit.SECONDS.sleep(5);
+		}
+	}
+	
+	public static void makeAddrCd(ElasticsearchClient esClient) throws Exception {
+		SearchResponse<Address> response = esClient.search(
+				s -> s.index(Indices.AddressIndex).size(EsTools.READ_MAX).sort(sort -> sort.field(f -> f.field("id"))),
+				Address.class);
+
+		ArrayList<Address> addrOldList = getResultAddrList(response);
+		Map<String, Long> addrNewMap = makeAddrList(esClient, addrOldList);
+		updateAddrMap(esClient, addrNewMap);
+
+		while (true) {
+			if (response.hits().hits().size() < EsTools.READ_MAX)
+				break;
+			Hit<Address> last = response.hits().hits().get(response.hits().hits().size() - 1);
+			String lastId = last.id();
+			response = esClient.search(s -> s.index(Indices.AddressIndex).size(5000)
+					.sort(sort -> sort.field(f -> f.field("id"))).searchAfter(lastId), Address.class);
+
+			addrOldList = getResultAddrList(response);
+			addrNewMap = makeAddrList(esClient, addrOldList);
+			updateAddrMap(esClient, addrNewMap);
+		}
+
+	}
+
+	private static ArrayList<Address> getResultAddrList(SearchResponse<Address> response) {
+		// TODO Auto-generated method stub
+		ArrayList<Address> addrList = new ArrayList<Address>();
+		for (Hit<Address> hit : response.hits().hits()) {
+			addrList.add(hit.source());
+		}
+		return addrList;
+	}
+
+	private static Map<String, Long> makeAddrList(ElasticsearchClient esClient, ArrayList<Address> addrOldList)
+			throws ElasticsearchException, IOException {
+		// TODO Auto-generated method stub
+
+		List<FieldValue> fieldValueList = new ArrayList<FieldValue>();
+		for (Address addr : addrOldList) {
+			fieldValueList.add(FieldValue.of(addr.getId()));
+		}
+
+		SearchResponse<Address> response = esClient.search(
+				s -> s.index(Indices.TxoIndex).size(0).query(q -> q.term(t -> t.field("utxo").value(true)))
+						.aggregations("filterByAddr",
+								a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
+										.aggregations("termByAddr",
+												a1 -> a1.terms(t3 -> t3.field("addr").size(addrOldList.size()))
+														.aggregations("cdSum", a2 -> a2.sum(su -> su.field("cd"))))),
+				Address.class);
+
+		Map<String, Long> addrCdMap = new HashMap<String, Long>();
+
+		List<StringTermsBucket> utxoBuckets = response.aggregations().get("filterByAddr").filter().aggregations()
+				.get("termByAddr").sterms().buckets().array();
+
+		for (StringTermsBucket bucket : utxoBuckets) {
+			String addr = bucket.key();
+			long value1 = (long) bucket.aggregations().get("cdSum").sum().value();
+			addrCdMap.put(addr, value1);
+		}
+		return addrCdMap;
+	}
+
+	private static void updateAddrMap(ElasticsearchClient esClient, Map<String, Long> addrNewMap) throws Exception {
+		// TODO Auto-generated method stub
+		Set<String> addrSet = addrNewMap.keySet();
+		BulkRequest.Builder br = new BulkRequest.Builder();
+
+		for (String addr : addrSet) {
+			Map<String, Long> updateMap = new HashMap<String, Long>();
+			updateMap.put("cd", addrNewMap.get(addr));
+			br.operations(o -> o.update(u -> u.index(Indices.AddressIndex).id(addr).action(a -> a.doc(updateMap))));
+		}
+		EsTools.bulkWithBuilder(esClient, br);
+	}
+	
+	
 	public void bytesToLong() {
 		long a = 14215752192L;
 		byte[] bytes= new byte[8];
@@ -122,9 +238,7 @@ public class mainTest {
 	    }
 	    return value;
 	}
-		
-	
-	
+
 	public void pkToETH() {
 		String unLockScript = "41fd184fce132dece2f23faaf394409df2feadff5c61d695a5406179c5af34e0bb7fafd48d0b1e819ccb96a3656fd972ba14ddf37ee1ffbb57de0751e711e164f2412102f62c5ec00bfbcaa71f4de400f54c6a1c1dad220f34246cf5561c292971641791";
 		String pk = FchTools.parsePkFromUnlockScript(unLockScript);
@@ -686,60 +800,58 @@ public class mainTest {
 		}
 	}
 
-	private ArrayList<Address> getResultAddrList(SearchResponse<Address> response) {
-		// TODO Auto-generated method stub
-		ArrayList<Address> addrList = new ArrayList<Address>();
-		for (Hit<Address> hit : response.hits().hits()) {
-			addrList.add(hit.source());
-		}
-		return addrList;
-	}
-	
-	
-
-	private Map<String, Long> makeAddrList(ElasticsearchClient esClient, ArrayList<Address> addrOldList)
-			throws ElasticsearchException, IOException {
-		// TODO Auto-generated method stub
-
-		List<FieldValue> fieldValueList = new ArrayList<FieldValue>();
-		for (Address addr : addrOldList) {
-			fieldValueList.add(FieldValue.of(addr.getId()));
-		}
-
-		SearchResponse<Address> response = esClient.search(s -> s.index("utxo").size(0)
-				// .query(q->q.term(t->t.field("utxo").value(true)))
-				.aggregations("filterByAddr",
-						a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
-								.aggregations("termByAddr",
-										a1 -> a1.terms(t3 -> t3.field("addr").size(addrOldList.size()))
-												.aggregations("cdSum", a2 -> a2.sum(su -> su.field("cd"))))),
-				Address.class);
-
-		Map<String, Long> addrCdMap = new HashMap<String, Long>();
-
-		List<StringTermsBucket> utxoBuckets = response.aggregations().get("filterByAddr").filter().aggregations()
-				.get("termByAddr").sterms().buckets().array();
-
-		for (StringTermsBucket bucket : utxoBuckets) {
-			String addr = bucket.key();
-			long value1 = (long) bucket.aggregations().get("cdSum").sum().value();
-			addrCdMap.put(addr, value1);
-		}
-		return addrCdMap;
-	}
-
-	private void updateAddrMap(ElasticsearchClient esClient, Map<String, Long> addrNewMap) throws Exception {
-		// TODO Auto-generated method stub
-		Set<String> addrSet = addrNewMap.keySet();
-		BulkRequest.Builder br = new BulkRequest.Builder();
-
-		for (String addr : addrSet) {
-			Map<String, Long> updateMap = new HashMap<String, Long>();
-			updateMap.put("cd", addrNewMap.get(addr));
-			br.operations(o -> o.update(u -> u.index("address").id(addr).action(a -> a.doc(updateMap))));
-		}
-		EsTools.bulkWithBuilder(esClient, br);
-	}
+//	private ArrayList<Address> getResultAddrList(SearchResponse<Address> response) {
+//		// TODO Auto-generated method stub
+//		ArrayList<Address> addrList = new ArrayList<Address>();
+//		for (Hit<Address> hit : response.hits().hits()) {
+//			addrList.add(hit.source());
+//		}
+//		return addrList;
+//	}
+//
+//	private Map<String, Long> makeAddrList(ElasticsearchClient esClient, ArrayList<Address> addrOldList)
+//			throws ElasticsearchException, IOException {
+//		// TODO Auto-generated method stub
+//
+//		List<FieldValue> fieldValueList = new ArrayList<FieldValue>();
+//		for (Address addr : addrOldList) {
+//			fieldValueList.add(FieldValue.of(addr.getId()));
+//		}
+//
+//		SearchResponse<Address> response = esClient.search(s -> s.index("utxo").size(0)
+//				// .query(q->q.term(t->t.field("utxo").value(true)))
+//				.aggregations("filterByAddr",
+//						a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
+//								.aggregations("termByAddr",
+//										a1 -> a1.terms(t3 -> t3.field("addr").size(addrOldList.size()))
+//												.aggregations("cdSum", a2 -> a2.sum(su -> su.field("cd"))))),
+//				Address.class);
+//
+//		Map<String, Long> addrCdMap = new HashMap<String, Long>();
+//
+//		List<StringTermsBucket> utxoBuckets = response.aggregations().get("filterByAddr").filter().aggregations()
+//				.get("termByAddr").sterms().buckets().array();
+//
+//		for (StringTermsBucket bucket : utxoBuckets) {
+//			String addr = bucket.key();
+//			long value1 = (long) bucket.aggregations().get("cdSum").sum().value();
+//			addrCdMap.put(addr, value1);
+//		}
+//		return addrCdMap;
+//	}
+//
+//	private void updateAddrMap(ElasticsearchClient esClient, Map<String, Long> addrNewMap) throws Exception {
+//		// TODO Auto-generated method stub
+//		Set<String> addrSet = addrNewMap.keySet();
+//		BulkRequest.Builder br = new BulkRequest.Builder();
+//
+//		for (String addr : addrSet) {
+//			Map<String, Long> updateMap = new HashMap<String, Long>();
+//			updateMap.put("cd", addrNewMap.get(addr));
+//			br.operations(o -> o.update(u -> u.index("address").id(addr).action(a -> a.doc(updateMap))));
+//		}
+//		EsTools.bulkWithBuilder(esClient, br);
+//	}
 
 	public void cd() throws ElasticsearchException, IOException {
 
@@ -765,8 +877,6 @@ public class mainTest {
 						s -> s.inline(i -> i.source("ctx._source.cd = (long)(ctx._source.value*(long)/100000000) ")
 								.params("now", JsonData.of(now)))));
 	}
-	
-	
 	
 	public ArrayList<BlockMark> readForkList(ElasticsearchClient esClient, long bestHeight) throws ElasticsearchException, IOException {
 		// TODO Auto-generated method stub
