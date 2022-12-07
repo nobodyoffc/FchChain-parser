@@ -16,7 +16,7 @@ import data.BlockMark;
 import esClient.EsTools;
 import esClient.Indices;
 import start.PathAndHeight;
-import tools.FileTools;
+import tools.BlockFileTools;
 import writeEs.RollBacker;
 
 
@@ -85,7 +85,7 @@ public class Preparer {
 			
 			Preparer.BestHash = backToBlockMark.getId();
 			Preparer.BestHeight = backToBlockMark.getHeight();
-			Preparer.CurrentFile = FileTools.getFileNameWithOrder(backToBlockMark.get_fileOrder());
+			Preparer.CurrentFile = BlockFileTools.getFileNameWithOrder(backToBlockMark.get_fileOrder());
 			Preparer.Pointer= backToBlockMark.get_pointer()+backToBlockMark.getSize()+8;
 			
 			TimeUnit.SECONDS.sleep(5);

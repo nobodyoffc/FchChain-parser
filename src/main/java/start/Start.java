@@ -16,8 +16,9 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import data.Block;
 import esClient.Indices;
 import esClient.StartClient;
+import parse.MainParser;
 import parse.Preparer;
-import tools.OpReFile;
+import tools.OpReFileTools;
 import tools.ParseTools;
 
 public class Start {
@@ -142,14 +143,14 @@ public class Start {
 	
 	private static void deleteOpReFiles() {
 		
-		String fileName = OpReFile.OpRefileName;
+		String fileName = MainParser.OpRefileName;
 		File file;
 		
 		while(true) {
 			file = new File(fileName);
 			if(file.exists()) {
 				file.delete();
-				fileName = OpReFile.getNextFile(fileName);
+				fileName = OpReFileTools.getNextFile(fileName);
 			}else break;
 		}
 	}

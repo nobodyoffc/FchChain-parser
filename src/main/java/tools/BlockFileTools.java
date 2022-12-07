@@ -1,6 +1,6 @@
 package tools;
 
-public class FileTools {
+public class BlockFileTools {
 
 	public static int getFileOrder(String currentFile) {	
 		String s =String.copyValueOf(currentFile.toCharArray(), 3, 5);

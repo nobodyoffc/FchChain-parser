@@ -19,9 +19,9 @@ import data.Block;
 import data.BlockMark;
 import esClient.Indices;
 import tools.BytesTools;
-import tools.FileTools;
+import tools.BlockFileTools;
 import tools.Hash;
-import tools.OpReFile;
+import tools.OpReFileTools;
 import tools.ParseTools;
 import writeEs.BlockMaker;
 import writeEs.BlockWriter;
@@ -36,10 +36,11 @@ public class MainParser {
 	public static final int REPEAT = -4;
 	public static final int WAIT_MORE = 0;
 	public static final String MAGIC = "f9beb4d9";
+	public static final  String OpRefileName = "opreturn0.byte";
 	
 	private static final Logger log = LoggerFactory.getLogger(MainParser.class);
 	
-	private OpReFile opReFile = new OpReFile();
+	private OpReFileTools opReFile = new OpReFileTools();
 	
 	public int startParse(ElasticsearchClient esClient) throws Exception {
 		
@@ -62,7 +63,7 @@ public class MainParser {
 			blockLength = checkResult.getBlockLength();
 			
 			if(blockLength == FILE_END) {
-				String nextFile = FileTools.getNextFile(Preparer.CurrentFile);
+				String nextFile = BlockFileTools.getNextFile(Preparer.CurrentFile);
 				if(new File(Preparer.Path, nextFile).exists()) {
 					System.out.println("file "+Preparer.CurrentFile+" finished.");	
 					log.info("Parsing file {} finished.",Preparer.CurrentFile);
@@ -83,7 +84,6 @@ public class MainParser {
 			if(blockLength == WRONG ) {
 				System.out.println("Read Magic wrong. pointer: "+Preparer.Pointer);
 				log.info("Read Magic wrong. pointer: {}",Preparer.Pointer);
-				opReFile.close();
 				return WRONG;
 				
 			}else if(blockLength == HEADER_FORK) {
@@ -208,7 +208,7 @@ public class MainParser {
 		return checkResult;
 	}
 	private int getFileOrder() {
-		return FileTools.getFileOrder(Preparer.CurrentFile);
+		return BlockFileTools.getFileOrder(Preparer.CurrentFile);
 	}
 	private class CheckResult{
 		int blockLength;
@@ -427,7 +427,7 @@ public class MainParser {
 	}
 	private byte[] getBlockBytes(BlockMark bm) throws IOException {
 		
-		File file = new File(Preparer.Path, FileTools.getFileNameWithOrder(bm.get_fileOrder()));
+		File file = new File(Preparer.Path, BlockFileTools.getFileNameWithOrder(bm.get_fileOrder()));
 		FileInputStream fis = new FileInputStream(file);
 		fis.skip(bm.get_pointer()+8);
 		byte[] blockBytes = new byte[(int) bm.getSize()];

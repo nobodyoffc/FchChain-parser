@@ -24,13 +24,13 @@ import esClient.EsTools;
 import esClient.Indices;
 import parse.Preparer;
 import parse.ReadyBlock;
-import tools.OpReFile;
+import tools.OpReFileTools;
 
 public class BlockWriter {
 
 	private static final Logger log = LoggerFactory.getLogger(BlockWriter.class);
 
-	public void writeIntoEs(ElasticsearchClient esClient, ReadyBlock readyBlock1,OpReFile opReFile) throws Exception {
+	public void writeIntoEs(ElasticsearchClient esClient, ReadyBlock readyBlock1,OpReFileTools opReFile) throws Exception {
 		ReadyBlock readyBlock = readyBlock1;	
 
 		Block block = readyBlock.getBlock();

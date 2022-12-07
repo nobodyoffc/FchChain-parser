@@ -2,7 +2,6 @@ package tools;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,22 +9,18 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import data.OpReturn;
+import parse.MainParser;
 import parse.ResultReadOpReFromFile;
 
-public class OpReFile {
-	
-	
-	public static final  String OpRefileName = "opreturn0.byte";
-	private File opFile;
-	private FileOutputStream opos;
-	private FileInputStream opis;
-	
-	private boolean write;
-	
-	public OpReFile() {
-		String fileName = OpRefileName;
-		write = true;
-		try {
+public class OpReFileTools {
+
+	public void writeOpReturnListIntoFile(ArrayList<OpReturn> opList) throws IOException {
+
+		if(opList==null || opList.isEmpty())return;
+		String fileName = MainParser.OpRefileName;
+		File opFile;
+		FileOutputStream opos;
+
 			while(true) {
 				opFile = new File(fileName);
 				if(opFile.length()>15728640) {
@@ -33,34 +28,10 @@ public class OpReFile {
 				}else break;
 			}
 			if(opFile.exists()) {
-	
 					opos = new FileOutputStream(opFile,true);
-	
 			}else {
 				opos = new FileOutputStream(opFile);
 			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public OpReFile(String fileName,long pointer) {
-			write = false;			
-			opFile = new File(fileName);
-			try {
-				opis = new FileInputStream(opFile);
-				opis.skip(pointer);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-	}
-
-	public void writeOpReturnListIntoFile(ArrayList<OpReturn> opList) throws IOException {
-
-		if(opList==null || opList.isEmpty())return;
 
 		Iterator<OpReturn> iterOp = opList.iterator();
 		while(iterOp.hasNext()) {
@@ -82,10 +53,23 @@ public class OpReFile {
 
 				opos.write(BytesTools.bytesMerger(opArrList));
 		}
+		opos.flush();
+		opos.close();
 	}
 	
 	public ResultReadOpReFromFile readOpReturnFromFileToList(long pointerInFile,int countWanted) throws IOException{
 
+		long pointer = pointerInFile;
+		
+		String fileName = MainParser.OpRefileName;
+		File opFile;
+		
+		opFile = new File(fileName);
+		FileInputStream opis;
+			opis = new FileInputStream(opFile);
+			opis.skip(pointer);
+
+		
 		ArrayList<OpReturn> opList = new ArrayList<OpReturn>();
 		int count = 0;
 		boolean fileEnd = false;
@@ -157,15 +141,11 @@ public class OpReFile {
 		result.pointerInFile = pointerInFile;
 		result.count = count;
 		result.fileEnd = fileEnd;
+		
+		opis.close();
 		return result;
 	}
 	
-	public void close() throws IOException {
-		if(write) {
-			opos.close();
-		}else 
-			opis.close();
-	}
 	private static int getFileOrder(String currentFile) {	
 		String s =String.copyValueOf(currentFile.toCharArray(), 8, 1);
 		return Integer.parseInt(s);

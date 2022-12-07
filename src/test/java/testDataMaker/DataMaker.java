@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import parse.MainParser;
 import tools.BytesTools;
-import tools.FileTools;
+import tools.BlockFileTools;
 import tools.Hash;
 
 public class DataMaker {
@@ -170,7 +170,7 @@ public class DataMaker {
 
 	public static BlockParts readBlock(int fileOrder, long pointer) throws IOException {
 
-		String fileName = FileTools.getFileNameWithOrder(fileOrder);
+		String fileName = BlockFileTools.getFileNameWithOrder(fileOrder);
 		
 		File inFile = new File("/Users/liuchangyong/fc_data/blocks",fileName);
 		FileInputStream fis = new FileInputStream(inFile);
