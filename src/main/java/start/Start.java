@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
 import data.Block;
 import esClient.Indices;
 import esClient.StartClient;
 import parse.Preparer;
+import tools.OpReFile;
+import tools.ParseTools;
 
 public class Start {
 	
@@ -65,7 +65,7 @@ public class Start {
 					break;
 				}	
 				
-				System.out.println("Start from 0, all indices and opreturn.byte will be deleted. Do you want? y or n:");			
+				System.out.println("Start from 0, all indices and opreturn*.byte will be deleted. Do you want? y or n:");			
 				String delete = sc.next();		
 				if (delete.equals("y")) {					
 					System.out.println("Do you sure? y or n:");				
@@ -75,10 +75,15 @@ public class Start {
 						if(!blk.exists()) {
 							System.out.println("blk00000.dat isn't found in "+config.getPath()+". Input 7 to config the path:");
 							break;
-						}				
+						}
+						
+						deleteOpReFiles();
+						
 						pathAndHeight.setPath(config.getPath());
 						pathAndHeight.setBestHeight(-1);
+						
 						Indices.deleteAllIndices(esClient);
+						
 						java.util.concurrent.TimeUnit.SECONDS.sleep(3);
 						Indices.createAllIndices(esClient);
 						new Preparer().prepare(esClient,pathAndHeight);
@@ -97,16 +102,11 @@ public class Start {
 	
 				if (restart.equals("y")) {	
 					
-					SearchResponse<Block> result = esClient.search(s->s
-							.index(Indices.BlockIndex)
-							.size(1)
-							.sort(so->so.field(f->f.field("height").order(SortOrder.Desc)))
-							, Block.class);
-					long bestHeight = result.hits().hits().get(0).source().getHeight();
+					Block bestBlock = ParseTools.getBestBlock(esClient);
+					long bestHeight = bestBlock.getHeight();
 					
-					//TODO
-					System.out.println("BestHeight: "+bestHeight);
-					java.util.concurrent.TimeUnit.SECONDS.sleep(3);
+					System.out.println("Restarting from BestHeight: "+bestHeight+" ...");
+					java.util.concurrent.TimeUnit.SECONDS.sleep(1);
 					
 					pathAndHeight.setPath(config.getPath());
 					pathAndHeight.setBestHeight(bestHeight-1);
@@ -140,6 +140,20 @@ public class Start {
 		sc.close();
 	}	
 	
+	private static void deleteOpReFiles() {
+		
+		String fileName = OpReFile.OpRefileName;
+		File file;
+		
+		while(true) {
+			file = new File(fileName);
+			if(file.exists()) {
+				file.delete();
+				fileName = OpReFile.getNextFile(fileName);
+			}else break;
+		}
+	}
+
 	private static int choose() throws IOException {
 		System.out.println("\n\nInput the number you want to do:\n");
 		int choice = 0;

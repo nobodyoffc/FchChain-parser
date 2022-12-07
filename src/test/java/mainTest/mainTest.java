@@ -25,9 +25,11 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch.cat.HealthResponse;
 import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
@@ -35,12 +37,14 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.json.JsonData;
 import data.Address;
+import data.Block;
 import data.BlockMark;
 import data.Txo;
 import esClient.EsTools;
@@ -79,28 +83,17 @@ public class mainTest {
 		System.out.println("ES Client was created. The cluster is: " + vb.get(0).cluster());
 		////////////////////
 
-		long cdMakeTime = System.currentTimeMillis();
-		long now = System.currentTimeMillis();
 
-		if(true) {
-			CdMaker cdMaker = new CdMaker();
-			
 			System.out.println("Make all cd of UTXOs...");
 			log.info("Make all cd of UTXOs...");
 			
 			//TimeUnit.MINUTES.sleep(1);
 			
+			Block bestBlock = new Block();
+			bestBlock.setTime(System.currentTimeMillis());
+			bestBlock.setHeight(389036l);
 			makeUtxoCd(esClient);
-			TimeUnit.MINUTES.sleep(1);
-			
-			System.out.println("Make all cd of Addresses...");
-			log.info("Make all cd of Addresses...");
-			makeAddrCd(esClient);
-			TimeUnit.MINUTES.sleep(1);
-			
-			cdMakeTime = now;
-		}
-		
+
 		Gson gson = new Gson();
 
 	//	System.out.println("result:" + gson.toJson(result));
@@ -108,8 +101,26 @@ public class mainTest {
 		esClient.shutdown();
 
 	}
-
+	
 	public static void makeUtxoCd(ElasticsearchClient esClient)
+			throws ElasticsearchException, IOException, InterruptedException {
+		long bestBlockTime = System.currentTimeMillis();
+
+		UpdateByQueryResponse response = esClient.updateByQuery(u -> u
+					.conflicts(Conflicts.Proceed)
+					.timeout(Time.of(t->t.time("1800s")))
+					.index(Indices.TxoIndex)
+					.query(q -> q.bool(b -> b
+							.filter(f -> f.term(t -> t.field("utxo").value(true)))))
+					.script(s -> s.inline(i1 -> i1.source(
+							"ctx._source.cd = (long)((((long)(params.bestBlockTime - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
+							.params("bestBlockTime", JsonData.of(bestBlockTime)))));
+		
+		System.out.println(response.updated()+" utxo updated within "
+				+response.took()/1000+" seconds. Version confilcts: "+response.versionConflicts());
+	}
+
+	public static void makeUtxoCd1(ElasticsearchClient esClient)
 			throws ElasticsearchException, IOException, InterruptedException {
 
 		long now = System.currentTimeMillis() / 1000;

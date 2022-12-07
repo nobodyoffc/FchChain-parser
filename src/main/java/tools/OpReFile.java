@@ -15,7 +15,7 @@ import parse.ResultReadOpReFromFile;
 public class OpReFile {
 	
 	
-	private  String fileName = "opreturn00000.byte";
+	public static final  String OpRefileName = "opreturn0.byte";
 	private File opFile;
 	private FileOutputStream opos;
 	private FileInputStream opis;
@@ -23,6 +23,7 @@ public class OpReFile {
 	private boolean write;
 	
 	public OpReFile() {
+		String fileName = OpRefileName;
 		write = true;
 		try {
 			while(true) {
@@ -165,16 +166,16 @@ public class OpReFile {
 		}else 
 			opis.close();
 	}
-	private int getFileOrder(String currentFile) {	
-		String s =String.copyValueOf(currentFile.toCharArray(), 8, 4);
+	private static int getFileOrder(String currentFile) {	
+		String s =String.copyValueOf(currentFile.toCharArray(), 8, 1);
 		return Integer.parseInt(s);
 	}
 
-	private String getFileNameWithOrder(int i) {
-		return "opreturn"+String.format("%04d",i)+".dat";
+	private static String getFileNameWithOrder(int i) {
+		return "opreturn"+String.format("%d",i)+".dat";
 	}
 
-	private String getNextFile(String currentFile) {
+	public static String getNextFile(String currentFile) {
 		return getFileNameWithOrder(getFileOrder(currentFile)+1);
 	}
 

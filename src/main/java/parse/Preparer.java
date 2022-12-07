@@ -98,12 +98,13 @@ public class Preparer {
 
 	private ArrayList<BlockMark> readForkList(ElasticsearchClient esClient, long bestHeight) throws ElasticsearchException, IOException {
 
-		//, MARK_FORK, "height",REOTG_PROTECT
 		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
-				.query(q->q
-						.range(r->r
-								.field("height")
-								.gt(JsonData.of(bestHeight-30))))
+				.query(q->q.bool(b->b
+						.filter(f->f
+								.term(t->t.field("status").value("fork")))
+						.must(m->m
+								.range(r->r.field("height").gt(JsonData.of(bestHeight-30))))
+						))
 				.size(EsTools.READ_MAX)
 				.sort(so->so.field(f->f
 						.field("height")

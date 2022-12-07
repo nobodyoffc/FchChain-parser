@@ -8,42 +8,53 @@ import java.util.Map;
 import java.util.Set;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
 import data.Address;
+import data.Block;
 import esClient.EsTools;
 import esClient.Indices;
 import parse.Preparer;
 
 public class CdMaker {
 
-	public void makeUtxoCd(ElasticsearchClient esClient)
+	public void makeUtxoCd(ElasticsearchClient esClient, Block bestBlock)
 			throws ElasticsearchException, IOException, InterruptedException {
 
-		long now = System.currentTimeMillis() / 1000;
-		long bestHeight = Preparer.mainList.get(Preparer.mainList.size() - 1).getHeight();
+		long bestBlockTime = bestBlock.getTime();
+		
+		System.out.println("Make all cd of UTXOs...");
 
-		for (int i = 0;; i += 5000) {
-			long fromHeight = i;
-			esClient.updateByQuery(u -> u.index(Indices.TxoIndex)
-					.query(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("utxo").value(true)))
-							.must(m -> m.range(r -> r.field("birthHeight").gte(JsonData.of(fromHeight))
-									.lt(JsonData.of(fromHeight + 5000))))))
-					.sort("birthHeight:asc")
-					.script(s -> s.inline(i1 -> i1.source(
-							"ctx._source.cd = (long)((((long)(params.now - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
-							.params("now", JsonData.of(now)))));
-			if (fromHeight + 5000 > bestHeight)
-				break;
-		}
+		UpdateByQueryResponse response = esClient.updateByQuery(u -> u
+				.conflicts(Conflicts.Proceed)
+				.timeout(Time.of(t->t.time("1800s")))
+				.index(Indices.TxoIndex)
+				.query(q -> q.bool(b -> b
+						.filter(f -> f.term(t -> t.field("utxo").value(true)))))
+				.script(s -> s.inline(i1 -> i1.source(
+						"ctx._source.cd = (long)((((long)(params.bestBlockTime - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
+						.params("bestBlockTime", JsonData.of(bestBlockTime)))));
+	
+	System.out.println(
+			response.updated()
+			+" utxo updated within "
+			+response.took()/1000
+			+" seconds. Version confilcts: "
+			+response.versionConflicts());
 	}
 
 	public void makeAddrCd(ElasticsearchClient esClient) throws Exception {
+		
+		System.out.println("Make all cd of Addresses...");
+		
 		SearchResponse<Address> response = esClient.search(
 				s -> s.index(Indices.AddressIndex).size(EsTools.READ_MAX).sort(sort -> sort.field(f -> f.field("id"))),
 				Address.class);
@@ -68,7 +79,6 @@ public class CdMaker {
 	}
 
 	private ArrayList<Address> getResultAddrList(SearchResponse<Address> response) {
-		// TODO Auto-generated method stub
 		ArrayList<Address> addrList = new ArrayList<Address>();
 		for (Hit<Address> hit : response.hits().hits()) {
 			addrList.add(hit.source());
@@ -78,7 +88,6 @@ public class CdMaker {
 
 	private Map<String, Long> makeAddrList(ElasticsearchClient esClient, ArrayList<Address> addrOldList)
 			throws ElasticsearchException, IOException {
-		// TODO Auto-generated method stub
 
 		List<FieldValue> fieldValueList = new ArrayList<FieldValue>();
 		for (Address addr : addrOldList) {
@@ -119,4 +128,6 @@ public class CdMaker {
 		}
 		EsTools.bulkWithBuilder(esClient, br);
 	}
+
+
 }

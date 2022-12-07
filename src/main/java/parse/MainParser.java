@@ -15,12 +15,14 @@ import org.slf4j.LoggerFactory;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
+import data.Block;
 import data.BlockMark;
 import esClient.Indices;
 import tools.BytesTools;
 import tools.FileTools;
 import tools.Hash;
 import tools.OpReFile;
+import tools.ParseTools;
 import writeEs.BlockMaker;
 import writeEs.BlockWriter;
 import writeEs.CdMaker;
@@ -106,24 +108,20 @@ public class MainParser {
 				Preparer.Pointer += blockLength;
 			}
 			
-			long now = System.currentTimeMillis();
-			if(now - cdMakeTime > (1000*60*60*12)) {
+			Block bestBlock = ParseTools.getBestBlock(esClient);
+			long bestBlockTime = bestBlock.getTime();
+			if(bestBlockTime*1000 - cdMakeTime > (1000*60*60*12)) {
 				CdMaker cdMaker = new CdMaker();
-				
-				System.out.println("Make all cd of UTXOs...");
-				log.info("Make all cd of UTXOs...");
-				
-				TimeUnit.MINUTES.sleep(1);
-				
-				cdMaker.makeUtxoCd(esClient);
-				TimeUnit.MINUTES.sleep(3);
-				
-				System.out.println("Make all cd of Addresses...");
-				log.info("Make all cd of Addresses...");
+
+				cdMaker.makeUtxoCd(esClient,bestBlock);
+				log.info("All cd of UTXOs updated.");
+				TimeUnit.MINUTES.sleep(2);
+
 				cdMaker.makeAddrCd(esClient);
+				log.info("All cd of addresses updated.");
 				TimeUnit.MINUTES.sleep(1);
 				
-				cdMakeTime = now;
+				cdMakeTime = bestBlockTime;
 			}
 		}
 	}
@@ -393,8 +391,14 @@ public class MainParser {
 		for(int i=Preparer.mainList.size()-1; i>=Preparer.mainList.size()-31; i--) {
 			BlockMark mainBlockMark = Preparer.mainList.get(i);
 			
+			ArrayList<BlockMark> mainToForkList = new ArrayList<BlockMark>();
+			
 			if(blockMarkBeforeFork.getId().equals(mainBlockMark.getId())) {
+				
 				esClient.bulk(br.build());
+				
+				Preparer.forkList.addAll(mainToForkList);
+				Preparer.mainList.removeAll(mainToForkList);
 				return;
 			}
 			mainBlockMark.setStatus(Preparer.FORK);
@@ -402,8 +406,7 @@ public class MainParser {
 					.index(Indices.BlockMarkIndex)
 					.id(mainBlockMark.getId())
 					.document(mainBlockMark)));	
-			Preparer.forkList.add(mainBlockMark);
-			Preparer.mainList.remove(i);
+			mainToForkList.add(mainBlockMark);
 		}
 
 		log.error("The fork block is not found in mainBlockMarkList!!!");
