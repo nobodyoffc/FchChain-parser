@@ -11,8 +11,8 @@ public class ReadyBlock {
 	private BlockHas blockHas;
 	private ArrayList<Tx> txList;
 	private ArrayList<TxHas> txHasList;
-	private ArrayList<Txo> inList;
-	private ArrayList<Txo> outList;
+	private ArrayList<Cash> inList;
+	private ArrayList<Cash> outList;
 	private ArrayList<OpReturn> opReturnList;
 	
 	public BlockMark getBlockMark() {
@@ -45,16 +45,16 @@ public class ReadyBlock {
 	public void setTxHasList(ArrayList<TxHas> txHasList) {
 		this.txHasList = txHasList;
 	}
-	public ArrayList<Txo> getInList() {
+	public ArrayList<Cash> getInList() {
 		return inList;
 	}
-	public void setInList(ArrayList<Txo> inList) {
+	public void setInList(ArrayList<Cash> inList) {
 		this.inList = inList;
 	}
-	public ArrayList<Txo> getOutList() {
+	public ArrayList<Cash> getOutList() {
 		return outList;
 	}
-	public void setOutList(ArrayList<Txo> outList) {
+	public void setOutList(ArrayList<Cash> outList) {
 		this.outList = outList;
 	}
 	public ArrayList<OpReturn> getOpReturnList() {

@@ -10,7 +10,9 @@ public class BlockMark {
 	//parsing info
 	private int _fileOrder;		//The order number of the file that the block is located in.
 	private long _pointer;		//The position of the beginning of the block in the file. 
+	private long orphanHeight;		//The number of orphan when writing this block to es. Only the point with _pend being 0 can be rollback to.
 	
+	//orphanHeight<=rollHeight  && height>rollHeight 的blockMark恢复为orphan
 	
 	public String getId() {
 		return id;
@@ -54,4 +56,11 @@ public class BlockMark {
 	public void setSize(long size) {
 		this.size = size;
 	}
+	public long getOrphanHeight() {
+		return orphanHeight;
+	}
+	public void setOrphanHeight(long orphanHeight) {
+		this.orphanHeight = orphanHeight;
+	}
+
 }

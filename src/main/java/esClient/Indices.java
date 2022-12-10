@@ -21,7 +21,7 @@ public class Indices {
 	public static final String BlockHasIndex = "block_has";
 	public static final String TxIndex = "tx";
 	public static final String TxHasIndex = "tx_has";
-	public static final String TxoIndex = "txo";
+	public static final String CashIndex = "cash";
 	public static final String AddressIndex = "address";
 	public static final String OpReturnIndex = "opreturn";
 	public static final String BlockMarkIndex = "block_mark";
@@ -38,7 +38,7 @@ public class Indices {
 		String blockHasJsonStr = "{\"mappings\":{\"properties\":{\"height\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"txMarks\":{\"properties\":{\"cdd\":{\"type\":\"long\"},\"fee\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"outValue\":{\"type\":\"long\"}}}}}}";
 		String txJsonStr = "{\"mappings\":{\"properties\":{\"blockId\":{\"type\":\"keyword\"},\"blockTime\":{\"type\":\"long\"},\"cdd\":{\"type\":\"long\"},\"coinbase\":{\"type\":\"text\"},\"fee\":{\"type\":\"long\"},\"height\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"inCount\":{\"type\":\"long\"},\"inValueT\":{\"type\":\"long\"},\"lockTime\":{\"type\":\"long\"},\"opReBrief\":{\"type\":\"text\"},\"outCount\":{\"type\":\"long\"},\"outValueT\":{\"type\":\"long\"},\"txIndex\":{\"type\":\"long\"},\"version\":{\"type\":\"long\"}}}}";
 		String txHasJsonStr = "{\"mappings\":{\"properties\":{\"height\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"inMarks\":{\"properties\":{\"addr\":{\"type\":\"wildcard\"},\"cdd\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"value\":{\"type\":\"long\"}}},\"outMarks\":{\"properties\":{\"addr\":{\"type\":\"wildcard\"},\"cdd\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"value\":{\"type\":\"long\"}}}}}}";
-		String txoJsonStr = "{\"mappings\":{\"properties\":{\"addr\":{\"type\":\"wildcard\"},\"birthHeight\":{\"type\":\"long\"},\"birthTime\":{\"type\":\"long\"},\"cdd\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"lockScript\":{\"type\":\"text\"},\"outIndex\":{\"type\":\"long\"},\"sequence\":{\"type\":\"keyword\"},\"sigHash\":{\"type\":\"keyword\"},\"spentHeight\":{\"type\":\"long\"},\"spentIndex\":{\"type\":\"long\"},\"spentTime\":{\"type\":\"long\"},\"spentTxId\":{\"type\":\"keyword\"},\"txId\":{\"type\":\"keyword\"},\"txIndex\":{\"type\":\"long\"},\"type\":{\"type\":\"keyword\"},\"unlockScript\":{\"type\":\"text\"},\"value\":{\"type\":\"long\"}}}}";
+		String cashJsonStr = "{\"mappings\":{\"properties\":{\"addr\":{\"type\":\"wildcard\"},\"birthHeight\":{\"type\":\"long\"},\"birthTime\":{\"type\":\"long\"},\"cdd\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"lockScript\":{\"type\":\"text\"},\"outIndex\":{\"type\":\"long\"},\"sequence\":{\"type\":\"keyword\"},\"sigHash\":{\"type\":\"keyword\"},\"spentHeight\":{\"type\":\"long\"},\"spentIndex\":{\"type\":\"long\"},\"spentTime\":{\"type\":\"long\"},\"spentTxId\":{\"type\":\"keyword\"},\"txId\":{\"type\":\"keyword\"},\"txIndex\":{\"type\":\"long\"},\"type\":{\"type\":\"keyword\"},\"unlockScript\":{\"type\":\"text\"},\"valid\":{\"type\":\"boolean\"},\"value\":{\"type\":\"long\"}}}}";
 		String addressJsonStr = "{\"mappings\":{\"properties\":{\"balance\":{\"type\":\"long\"},\"birthHeight\":{\"type\":\"long\"},\"btcAddr\":{\"type\":\"wildcard\"},\"cd\":{\"type\":\"long\"},\"cdd\":{\"type\":\"long\"},\"dogeAddr\":{\"type\":\"wildcard\"},\"ethAddr\":{\"type\":\"wildcard\"},\"expend\":{\"type\":\"long\"},\"guide\":{\"type\":\"wildcard\"},\"id\":{\"type\":\"wildcard\"},\"income\":{\"type\":\"long\"},\"lastHeight\":{\"type\":\"long\"},\"ltcAddr\":{\"type\":\"wildcard\"},\"pubkey\":{\"type\":\"wildcard\"},\"trxAddr\":{\"type\":\"wildcard\"}}}}";
 		String opreturnJsonStr = "{\"mappings\":{\"properties\":{\"cdd\":{\"type\":\"long\"},\"height\":{\"type\":\"long\"},\"id\":{\"type\":\"keyword\"},\"opReturn\":{\"type\":\"text\"},\"recipient\":{\"type\":\"wildcard\"},\"signer\":{\"type\":\"wildcard\"},\"txIndex\":{\"type\":\"long\"}}}}";
 		
@@ -48,13 +48,13 @@ public class Indices {
 		InputStream blockHasJsonStrIs = new ByteArrayInputStream(blockHasJsonStr.getBytes());
 		InputStream txJsonStrIs = new ByteArrayInputStream(txJsonStr.getBytes());
 		InputStream txHasJsonStrIs = new ByteArrayInputStream(txHasJsonStr.getBytes());
-		InputStream txoJsonStrIs = new ByteArrayInputStream(txoJsonStr.getBytes());
+		InputStream cashJsonStrIs = new ByteArrayInputStream(cashJsonStr.getBytes());
 		InputStream addressJsonIs = new ByteArrayInputStream(addressJsonStr.getBytes());
 		InputStream opreturnJsonStrIs = new ByteArrayInputStream(opreturnJsonStr.getBytes());
 
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.BlockMarkIndex).withJson(blockMarkJsonStrIs));
-			//blockMarkJsonStrIs.close();
+			blockMarkJsonStrIs.close();
 			if(req.acknowledged()) {
 			log.info("Index  block_mark created.");
 			}
@@ -65,7 +65,7 @@ public class Indices {
 		
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.BlockIndex).withJson(blockJsonStrIs));
-			//blockJsonStrIs.close();
+			blockJsonStrIs.close();
 			if(req.acknowledged()) {
 			log.info("Index  block created.");
 			}
@@ -76,7 +76,7 @@ public class Indices {
 		
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.BlockHasIndex).withJson(blockHasJsonStrIs));
-			//blockHasJsonStrIs.close();
+			blockHasJsonStrIs.close();
 			
 			if(req.acknowledged()) {
 			log.info("Index block_has created.");
@@ -90,7 +90,7 @@ public class Indices {
 		
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.TxIndex).withJson(txJsonStrIs));
-			//txJsonStrIs.close();
+			txJsonStrIs.close();
 			
 			if(req.acknowledged()) {
 			log.info("Index tx created.");
@@ -102,7 +102,7 @@ public class Indices {
 		
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.TxHasIndex).withJson(txHasJsonStrIs));
-			//txHasJsonStrIs.close();
+			txHasJsonStrIs.close();
 			
 			if(req.acknowledged()) {
 			log.info("Index tx_has created.");
@@ -113,8 +113,8 @@ public class Indices {
 		}
 		
 		try {
-			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.TxoIndex).withJson(txoJsonStrIs));
-			//txoJsonStrIs.close();
+			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.CashIndex).withJson(cashJsonStrIs));
+			cashJsonStrIs.close();
 			
 			if(req.acknowledged()) {
 			log.info("Index stxo created.");
@@ -126,7 +126,7 @@ public class Indices {
 		
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.AddressIndex).withJson(addressJsonIs));
-			//addressJsonIs.close();
+			addressJsonIs.close();
 			
 			if(req.acknowledged()) {
 			log.info("Index address created.");
@@ -138,7 +138,7 @@ public class Indices {
 		
 		try {
 			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.OpReturnIndex).withJson(opreturnJsonStrIs));
-			//opreturnJsonStrIs.close();	
+			opreturnJsonStrIs.close();	
 			if(req.acknowledged()) {
 			log.info("Index opreturn created.");
 			}
@@ -187,12 +187,12 @@ public class Indices {
 		}
 		
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.TxoIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.CashIndex));
 			if(req.acknowledged()) {
-			log.info("Index txo delted.");
+			log.info("Index cash delted.");
 			}
 		}catch(ElasticsearchException e) {
-			log.info("Index txo deleting failed.",e);
+			log.info("Index cash deleting failed.",e);
 		}
 		
 		try {

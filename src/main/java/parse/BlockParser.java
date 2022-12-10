@@ -10,7 +10,7 @@ import data.BlockMark;
 import data.OpReturn;
 import data.Tx;
 import data.TxHas;
-import data.Txo;
+import data.Cash;
 import tools.BytesTools;
 import tools.FchTools;
 import tools.Hash;
@@ -19,7 +19,7 @@ import tools.ParseTools.VarintResult;
 
 public class BlockParser {
 	public ReadyBlock parseBlock(byte[] blockBytes, BlockMark blockMark) throws IOException {
-		// TODO Auto-generated method stub
+		
 
 		Block block = new Block();
 		block.setId(blockMark.getId());
@@ -31,7 +31,7 @@ public class BlockParser {
 
 		byte[] blockHeadBytes = new byte[80];
 		blockInputStream.read(blockHeadBytes);
-
+		
 		byte[] blockBodyBytes = new byte[(int) (block.getSize() - 80)];
 		blockInputStream.read(blockBodyBytes);
 
@@ -45,7 +45,7 @@ public class BlockParser {
 	}
 
 	private Block parseBlockHead(byte[] blockHeadBytes, Block block1) {
-		// TODO Auto-generated method stub
+		
 		Block block = block1;
 
 		int offset = 0;
@@ -90,7 +90,7 @@ public class BlockParser {
 	}
 
 	private ReadyBlock parseBlockBody(byte[] blockBodyBytes, Block block1) throws IOException {
-		// TODO Auto-generated method stub
+		
 		ReadyBlock readyBlock = new ReadyBlock();
 		Block block = block1;
 		ByteArrayInputStream blockInputStream = new ByteArrayInputStream(blockBodyBytes);
@@ -100,8 +100,8 @@ public class BlockParser {
 
 		ArrayList<Tx> txList = new ArrayList<Tx>();
 		ArrayList<TxHas> txHasList = new ArrayList<TxHas>();
-		ArrayList<Txo> inList = new ArrayList<Txo>();
-		ArrayList<Txo> outList = new ArrayList<Txo>();
+		ArrayList<Cash> inList = new ArrayList<Cash>();
+		ArrayList<Cash> outList = new ArrayList<Cash>();
 		ArrayList<OpReturn> opReturnList = new ArrayList<OpReturn>();
 
 		TxResult txResult = new TxResult();
@@ -173,7 +173,7 @@ public class BlockParser {
 		ParseTxOutResult parseTxOutResult = parseOut(blockInputStream, tx);
 		bytesList.add(parseTxOutResult.rawBytes);
 		tx = parseTxOutResult.tx;
-		ArrayList<Txo> rawOutList = parseTxOutResult.rawOutList;
+		ArrayList<Cash> rawOutList = parseTxOutResult.rawOutList;
 
 		// Read lock time.
 		// 读取输出时间锁
@@ -183,7 +183,7 @@ public class BlockParser {
 		tx.setLockTime(BytesTools.bytes4ToLongLE(b4LockTime));
 
 		tx.setId(BytesTools.bytesToHexStringLE(Hash.Sha256x2(BytesTools.bytesMerger(bytesList))));
-		ArrayList<Txo> outList = makeOutList(tx.getId(), rawOutList);
+		ArrayList<Cash> outList = makeOutList(tx.getId(), rawOutList);
 
 		TxHas txHas = new TxHas();
 		txHas.setId(tx.getId());
@@ -197,16 +197,16 @@ public class BlockParser {
 
 	private class TxResult {
 		Tx tx;
-		ArrayList<Txo> inList;
-		ArrayList<Txo> outList;
+		ArrayList<Cash> inList;
+		ArrayList<Cash> outList;
 		OpReturn opReturn;
 	}
 
 	private ParseTxOutResult parseOut(ByteArrayInputStream blockInputStream, Tx tx1) throws IOException {
 		Tx tx = tx1;
-		ArrayList<byte[]> rawBytesList = new ArrayList<byte[]>(); // For returning raw bytes./用于返回原始字节数据。
-		ArrayList<Txo> rawOutList = new ArrayList<Txo>();// For returning outputs without
-															// txhash./用于返回整理过但不包含txHash的output；
+		ArrayList<byte[]> rawBytesList = new ArrayList<byte[]>(); // For returning raw bytes.
+		ArrayList<Cash> rawOutList = new ArrayList<Cash>();// For returning outputs without
+
 		String opReturnStr = "";
 
 		// Parse output count.
@@ -229,7 +229,7 @@ public class BlockParser {
 		for (int j = 0; j < outputCount; j++) {
 			// Start one output.
 			// 开始解析一个输出。
-			Txo out = new Txo();
+			Cash out = new Cash();
 			out.setOutIndex(j);
 			out.setTxIndex(tx.getTxIndex());
 			out.setBirthHeight(tx.getHeight());
@@ -267,7 +267,7 @@ public class BlockParser {
 				opReturnStr = new String(Arrays.copyOfRange(bScript, 2, bScript.length));
 				out.setAddr("OpReturn");
 
-				out.setUtxo(false);
+				out.setValid(false);
 				if (tx.getTxIndex() != 0) {
 					if (opReturnStr.length() <= 30) {
 						tx.setOpReBrief(opReturnStr);
@@ -290,7 +290,7 @@ public class BlockParser {
 
 			// Add block and tx information to output./给输出添加区块和交易信息。
 			// Add information where it from/添加来源信息
-			out.setUtxo(true);
+			out.setValid(true);
 			out.setBirthTime(tx.getBlockTime());
 			out.setTxIndex(tx.getTxIndex());
 
@@ -312,13 +312,13 @@ public class BlockParser {
 
 	private class ParseTxOutResult {
 		Tx tx;
-		ArrayList<Txo> rawOutList;
+		ArrayList<Cash> rawOutList;
 		byte[] rawBytes;
 		String opReturnStr;
 	}
 
-	private ArrayList<Txo> makeOutList(String txId, ArrayList<Txo> rawOutList1) {
-		ArrayList<Txo> rawOutList = rawOutList1;
+	private ArrayList<Cash> makeOutList(String txId, ArrayList<Cash> rawOutList1) {
+		ArrayList<Cash> rawOutList = rawOutList1;
 		for (int j = 0; j < rawOutList.size(); j++) {
 			rawOutList.get(j).setTxId(txId);
 			rawOutList.get(j).setId(ParseTools.calcTxoId(txId, j));
@@ -348,14 +348,14 @@ public class BlockParser {
 
 		bytesList.add(parseTxInResult.rawBytes);
 		tx = parseTxInResult.tx;
-		ArrayList<Txo> rawInList = parseTxInResult.rawInList;
+		ArrayList<Cash> rawInList = parseTxInResult.rawInList;
 
 		// Read outputs /读输出
 		// Parse Outputs./解析输出。
 		ParseTxOutResult parseTxOutResult = parseOut(blockInputStream, tx);
 		bytesList.add(parseTxOutResult.rawBytes);
 		tx = parseTxOutResult.tx;
-		ArrayList<Txo> rawOutList = parseTxOutResult.rawOutList;
+		ArrayList<Cash> rawOutList = parseTxOutResult.rawOutList;
 
 		// Read lock time.
 		// 读取输出时间锁
@@ -365,11 +365,11 @@ public class BlockParser {
 		tx.setLockTime(BytesTools.bytesToIntLE(b4LockTime));
 
 		tx.setId(BytesTools.bytesToHexStringLE(Hash.Sha256x2(BytesTools.bytesMerger(bytesList))));
-		ArrayList<Txo> inList = makeInList(tx.getId(), rawInList);
-		ArrayList<Txo> outList = makeOutList(tx.getId(), rawOutList);
+		ArrayList<Cash> inList = makeInList(tx.getId(), rawInList);
+		ArrayList<Cash> outList = makeOutList(tx.getId(), rawOutList);
 		
 		OpReturn opReturn = new OpReturn();
-		if(parseTxOutResult.opReturnStr!=null) {
+		if(parseTxOutResult.opReturnStr!=null && !"".equals(parseTxOutResult.opReturnStr)) {
 			opReturn.setOpReturn(parseTxOutResult.opReturnStr);
 			opReturn.setId(tx.getId());
 			opReturn.setTxIndex(tx.getTxIndex());
@@ -377,7 +377,7 @@ public class BlockParser {
 		}
 		TxResult txResult = new TxResult();
 		txResult.tx = tx;
-		if(parseTxOutResult.opReturnStr!=null)
+		if(parseTxOutResult.opReturnStr!=null && !"".equals(parseTxOutResult.opReturnStr)) 
 			txResult.opReturn = opReturn;
 		txResult.inList = inList;
 		txResult.outList = outList;
@@ -386,9 +386,9 @@ public class BlockParser {
 	}
 
 	private ParseTxInResult parseInput(ByteArrayInputStream blockInputStream, Tx tx1) throws IOException {
-		ArrayList<byte[]> rawBytesList = new ArrayList<byte[]>(); // For returning raw bytes./用于返回原始字节数据。
-		ArrayList<Txo> rawInList = new ArrayList<Txo>();// For returning inputs without
-														// txhash./用于返回整理过但不包含txHash的output；
+		ArrayList<byte[]> rawBytesList = new ArrayList<byte[]>(); // For returning raw bytes
+		ArrayList<Cash> rawInList = new ArrayList<Cash>();// For returning inputs without
+
 		Tx tx = tx1;
 		// Get input count./获得输入数量
 		VarintResult varintParseResult = new VarintResult();
@@ -401,12 +401,12 @@ public class BlockParser {
 
 		// Read inputs /读输入
 		for (int j = 0; j < inputCount; j++) {
-			Txo input = new Txo();
+			Cash input = new Cash();
 
 			input.setSpentTime(tx.getBlockTime());
 			input.setSpentHeight(tx.getHeight());
 			input.setSpentIndex(j);
-			input.setUtxo(false);
+			input.setValid(false);
 
 			// Read preTXHash and preOutIndex./读取前交易哈希和输出索引。
 			byte[] b36PreTxIdAndIndex = new byte[32 + 4];
@@ -454,14 +454,7 @@ public class BlockParser {
 			default:
 				input.setSigHash(null);
 			}
-
-			// Read pubKey and calculate address./读公钥计算地址
-//			byte pubkeyLenB = bvScript[sigLen+1]; //公钥长度
-//			int pubkeyLen =Byte.toUnsignedInt(pubkeyLenB);
-//			byte[] pubKeyBytes = new byte[pubkeyLen];
-//			System.arraycopy(bvScript, sigLen+2, pubKeyBytes, 0, pubkeyLen); 
-//			input.setAddr(FchTools.pubKeyToFchAddr(pubKeyBytes));
-//			
+		
 			// Get sequence./获取sequence。
 			byte[] b4Sequence = new byte[4];
 			blockInputStream.read(b4Sequence);
@@ -483,14 +476,14 @@ public class BlockParser {
 
 	private class ParseTxInResult {
 		Tx tx;
-		ArrayList<Txo> rawInList;
+		ArrayList<Cash> rawInList;
 		byte[] rawBytes;
 	}
 
-	private ArrayList<Txo> makeInList(String txId, ArrayList<Txo> rawInList) {
-		// TODO Auto-generated method stub
-		ArrayList<Txo> inList = rawInList;
-		for (Txo in : inList) {
+	private ArrayList<Cash> makeInList(String txId, ArrayList<Cash> rawInList) {
+		
+		ArrayList<Cash> inList = rawInList;
+		for (Cash in : inList) {
 			in.setSpentTxId(txId);
 		}
 		return inList;

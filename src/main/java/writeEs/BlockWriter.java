@@ -19,7 +19,7 @@ import data.BlockMark;
 import data.OpReturn;
 import data.Tx;
 import data.TxHas;
-import data.Txo;
+import data.Cash;
 import esClient.EsTools;
 import esClient.Indices;
 import parse.Preparer;
@@ -37,8 +37,8 @@ public class BlockWriter {
 		BlockHas blockHas = readyBlock.getBlockHas();
 		ArrayList<Tx> txList = readyBlock.getTxList();
 		ArrayList<TxHas> txHasList = readyBlock.getTxHasList();
-		ArrayList<Txo> inList = readyBlock.getInList();
-		ArrayList<Txo> outList = readyBlock.getOutWriteList();
+		ArrayList<Cash> inList = readyBlock.getInList();
+		ArrayList<Cash> outList = readyBlock.getOutWriteList();
 		ArrayList<OpReturn> opReturnList = readyBlock.getOpReturnList();
 		BlockMark blockMark = readyBlock.getBlockMark();
 		ArrayList<Address> addrList = readyBlock.getAddrList();
@@ -58,7 +58,13 @@ public class BlockWriter {
 		putBlockMark(esClient, blockMark, br);
 		BulkResponse response = EsTools.bulkWithBuilder(esClient, br);
 		
-		System.out.println("Main chain linked. Orphan: "+Preparer.orphanList.size()+" Fork: "+Preparer.forkList.size()+" BlockId: "+blockMark.getId()+" Height: "+blockMark.getHeight());
+		System.out.println("Main chain linked. "
+				+"Orphan: "+Preparer.orphanList.size()
+				+" Fork: "+Preparer.forkList.size()
+				+" id: "+blockMark.getId()
+				+" file: "+Preparer.CurrentFile
+				+" pointer: "+Preparer.Pointer
+				+" Height:"+blockMark.getHeight());
 
 		
 		response.items().iterator();
@@ -127,38 +133,38 @@ public class BlockWriter {
 		}
 	}
 
-	private void putStxo(ElasticsearchClient esClient, ArrayList<Txo> inList, Builder br) throws Exception {
+	private void putStxo(ElasticsearchClient esClient, ArrayList<Cash> inList, Builder br) throws Exception {
 		if (inList != null) {
 			if (inList.size() > EsTools.WRITE_MAX / 5) {
-				Iterator<Txo> iter = inList.iterator();
+				Iterator<Cash> iter = inList.iterator();
 				ArrayList<String> idList = new ArrayList<String>();
 				while (iter.hasNext())
 					idList.add(iter.next().getId());
-				EsTools.bulkWriteList(esClient, Indices.TxoIndex, inList, idList, Txo.class);
+				EsTools.bulkWriteList(esClient, Indices.CashIndex, inList, idList, Cash.class);
 				TimeUnit.SECONDS.sleep(3);
 			} else {
-				Iterator<Txo> iterTxo = inList.iterator();
+				Iterator<Cash> iterTxo = inList.iterator();
 				while (iterTxo.hasNext()) {
-					Txo om = iterTxo.next();
-					br.operations(op -> op.index(i -> i.index(Indices.TxoIndex).id(om.getId()).document(om)));
+					Cash om = iterTxo.next();
+					br.operations(op -> op.index(i -> i.index(Indices.CashIndex).id(om.getId()).document(om)));
 				}
 			}
 		}
 	}
 
-	private void putUtxo(ElasticsearchClient esClient, ArrayList<Txo> outList, Builder br) throws Exception {
+	private void putUtxo(ElasticsearchClient esClient, ArrayList<Cash> outList, Builder br) throws Exception {
 		if (outList.size() > EsTools.WRITE_MAX / 5) {
-			Iterator<Txo> iter = outList.iterator();
+			Iterator<Cash> iter = outList.iterator();
 			ArrayList<String> idList = new ArrayList<String>();
 			while (iter.hasNext())
 				idList.add(iter.next().getId());
-			EsTools.bulkWriteList(esClient, Indices.TxoIndex, outList, idList, Txo.class);
+			EsTools.bulkWriteList(esClient, Indices.CashIndex, outList, idList, Cash.class);
 			TimeUnit.SECONDS.sleep(3);
 		} else {
-			Iterator<Txo> iterTxo = outList.iterator();
+			Iterator<Cash> iterTxo = outList.iterator();
 			while (iterTxo.hasNext()) {
-				Txo om = iterTxo.next();
-				br.operations(op -> op.index(i -> i.index(Indices.TxoIndex).id(om.getId()).document(om)));
+				Cash om = iterTxo.next();
+				br.operations(op -> op.index(i -> i.index(Indices.CashIndex).id(om.getId()).document(om)));
 			}
 		}
 	}

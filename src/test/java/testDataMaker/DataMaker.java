@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import parse.MainParser;
+import parse.ChainParser;
 import tools.BytesTools;
 import tools.BlockFileTools;
 import tools.Hash;
@@ -123,7 +123,7 @@ public class DataMaker {
 			//Check valid header fork
 			b4 = Arrays.copyOfRange(blockBodyBytes, 0, 4);
 			String b4Hash = BytesTools.bytesToHexStringBE(b4) ;
-			if(b4Hash.equals(MainParser.MAGIC)) {
+			if(b4Hash.equals(ChainParser.MAGIC)) {
 				System.out.println("Found valid header fork. Pointer: "+pointer);
 				pointer += 88;
 			}

@@ -36,13 +36,12 @@ public class CdMaker {
 		UpdateByQueryResponse response = esClient.updateByQuery(u -> u
 				.conflicts(Conflicts.Proceed)
 				.timeout(Time.of(t->t.time("1800s")))
-				.index(Indices.TxoIndex)
+				.index(Indices.CashIndex)
 				.query(q -> q.bool(b -> b
 						.filter(f -> f.term(t -> t.field("utxo").value(true)))))
 				.script(s -> s.inline(i1 -> i1.source(
-						"ctx._source.cd = (long)((((long)(params.bestBlockTime - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
+						"ctx._source.cd = (long)(((long)((params.bestBlockTime - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
 						.params("bestBlockTime", JsonData.of(bestBlockTime)))));
-	
 	System.out.println(
 			response.updated()
 			+" utxo updated within "
@@ -95,7 +94,7 @@ public class CdMaker {
 		}
 
 		SearchResponse<Address> response = esClient.search(
-				s -> s.index(Indices.TxoIndex).size(0).query(q -> q.term(t -> t.field("utxo").value(true)))
+				s -> s.index(Indices.CashIndex).size(0).query(q -> q.term(t -> t.field("utxo").value(true)))
 						.aggregations("filterByAddr",
 								a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
 										.aggregations("termByAddr",

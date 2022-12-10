@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import data.OpReturn;
-import parse.MainParser;
+import parse.ChainParser;
 import parse.ResultReadOpReFromFile;
 
 public class OpReFileTools {
@@ -17,13 +17,13 @@ public class OpReFileTools {
 	public void writeOpReturnListIntoFile(ArrayList<OpReturn> opList) throws IOException {
 
 		if(opList==null || opList.isEmpty())return;
-		String fileName = MainParser.OpRefileName;
+		String fileName = ChainParser.OpRefileName;
 		File opFile;
 		FileOutputStream opos;
 
 			while(true) {
 				opFile = new File(fileName);
-				if(opFile.length()>15728640) {
+				if(opFile.length()>251658240) {
 					fileName =  getNextFile(fileName);
 				}else break;
 			}
@@ -61,7 +61,7 @@ public class OpReFileTools {
 
 		long pointer = pointerInFile;
 		
-		String fileName = MainParser.OpRefileName;
+		String fileName = ChainParser.OpRefileName;
 		File opFile;
 		
 		opFile = new File(fileName);
@@ -152,7 +152,7 @@ public class OpReFileTools {
 	}
 
 	private static String getFileNameWithOrder(int i) {
-		return "opreturn"+String.format("%d",i)+".dat";
+		return "opreturn"+String.format("%d",i)+".byte";
 	}
 
 	public static String getNextFile(String currentFile) {

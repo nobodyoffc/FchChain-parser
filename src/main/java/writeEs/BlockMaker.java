@@ -17,7 +17,7 @@ import data.OpReturn;
 import data.Tx;
 import data.TxHas;
 import data.TxMark;
-import data.Txo;
+import data.Cash;
 import data.TxoMark;
 import esClient.EsTools;
 import esClient.Indices;
@@ -54,29 +54,29 @@ public class BlockMaker {
 
 		ReadyBlock inListMadeBlock = rawBlock;
 
-		ArrayList<Txo> inList = inListMadeBlock.getInList();
-		Map<String, Txo> inMap = new HashMap<String, Txo>();
+		ArrayList<Cash> inList = inListMadeBlock.getInList();
+		Map<String, Cash> inMap = new HashMap<String, Cash>();
 		List<String> inStrList = new ArrayList<String>();
-		for (Txo in : inList) {
+		for (Cash in : inList) {
 			inMap.put(in.getId(), in);
 			inStrList.add(in.getId());
 		}
 
-		ArrayList<Txo> outList = inListMadeBlock.getOutList();
-		Map<String, Txo> outMap = new HashMap<String, Txo>();
-		for (Txo out : outList) {
+		ArrayList<Cash> outList = inListMadeBlock.getOutList();
+		Map<String, Cash> outMap = new HashMap<String, Cash>();
+		for (Cash out : outList) {
 			outMap.put(out.getId(), out);
 		}
 
-		MgetResult<Txo> inMgetResult = EsTools.getMultiByIdList(esClient, Indices.TxoIndex, inStrList, Txo.class);
-		ArrayList<Txo> inOldList = (ArrayList<Txo>) inMgetResult.getResultList();
+		MgetResult<Cash> inMgetResult = EsTools.getMultiByIdList(esClient, Indices.CashIndex, inStrList, Cash.class);
+		ArrayList<Cash> inOldList = (ArrayList<Cash>) inMgetResult.getResultList();
 		List<String> inNewIdList = inMgetResult.getMissList();
 
-		ArrayList<Txo> inMadeList = new ArrayList<Txo>();
-		ArrayList<Txo> outWriteList = new ArrayList<Txo>();
+		ArrayList<Cash> inMadeList = new ArrayList<Cash>();
+		ArrayList<Cash> outWriteList = new ArrayList<Cash>();
 
-		for (Txo out : inOldList) {
-			Txo in = inMap.get(out.getId());
+		for (Cash out : inOldList) {
+			Cash in = inMap.get(out.getId());
 			in.setAddr(out.getAddr());
 			in.setOutIndex(out.getOutIndex());
 			in.setType(out.getType());
@@ -92,8 +92,8 @@ public class BlockMaker {
 		}
 
 		for (String id : inNewIdList) {
-			Txo in = inMap.get(id);
-			Txo out = outMap.get(id);
+			Cash in = inMap.get(id);
+			Cash out = outMap.get(id);
 			in.setAddr(out.getAddr());
 			in.setOutIndex(out.getOutIndex());
 			in.setType(out.getType());
@@ -121,7 +121,7 @@ public class BlockMaker {
 
 	private ReadyBlock makeTxTxHasOpReturn(ReadyBlock blockForMaking) {
 
-		ArrayList<Txo> outList = blockForMaking.getOutList();
+		ArrayList<Cash> outList = blockForMaking.getOutList();
 		ArrayList<Tx> txList = blockForMaking.getTxList();
 		ArrayList<OpReturn> opList = blockForMaking.getOpReturnList();
 
@@ -142,7 +142,7 @@ public class BlockMaker {
 		}
 
 		if (blockForMaking.getInList() != null)
-			for (Txo in : blockForMaking.getInList()) {
+			for (Cash in : blockForMaking.getInList()) {
 				long value = in.getValue();
 				long cdd = in.getCdd();
 
@@ -160,7 +160,7 @@ public class BlockMaker {
 				txHas.getInMarks().add(inMark);
 			}
 
-		for (Txo out : outList) {
+		for (Cash out : outList) {
 			long value = out.getValue();
 
 			Tx tx = txMap.get(out.getTxId());
@@ -175,7 +175,17 @@ public class BlockMaker {
 			txHas.getOutMarks().add(outMark);
 		}
 
-		if (opList != null && !opList.isEmpty())
+		
+		if (opList != null && !opList.isEmpty()) {
+			
+			//TODO
+			Iterator<OpReturn> iterOp = opList.iterator();
+			OpReturn op = new OpReturn();
+			while(iterOp.hasNext()) {
+				op = iterOp.next();
+				if("".equals(op.getOpReturn()))iterOp.remove();
+			}
+		
 			for (OpReturn opReturn : opList) {
 				String txId = opReturn.getId();
 
@@ -185,7 +195,7 @@ public class BlockMaker {
 
 				for (TxoMark txoB : txHasMap.get(txId).getOutMarks()) {
 					String addr = txoB.getAddr();
-					if (!addr.equals(signer) && !addr.equals("unknown") && addr.equals("OpReturn")) {
+					if (!addr.equals(signer) && !addr.equals("unknown") && !addr.equals("OpReturn")) {
 						opReturn.setRecipient(addr);
 						break;
 					}
@@ -193,6 +203,7 @@ public class BlockMaker {
 				if (opReturn.getRecipient() == null)
 					opReturn.setRecipient("nobody");
 			}
+		}
 
 		Iterator<Tx> iterTx = txList.iterator();
 		ArrayList<Tx> txGoodList = new ArrayList<Tx>();
@@ -282,10 +293,10 @@ public class BlockMaker {
 					addr.setUtxo(addr.getUtxo() - 1);
 
 					if (addr.getPubkey() == null) {
-						ArrayList<Txo> inList = readyBlock.getInList();
-						Iterator<Txo> iter = inList.iterator();
+						ArrayList<Cash> inList = readyBlock.getInList();
+						Iterator<Cash> iter = inList.iterator();
 						while (iter.hasNext()) {
-							Txo in = iter.next();
+							Cash in = iter.next();
 							if (in.getAddr().equals(addr.getId()) && in.getType() == "P2PKH") {
 								setPKAndMoreAddrs(addr, in.getUnlockScript());
 								break;
@@ -331,14 +342,14 @@ public class BlockMaker {
 
 	private List<String> getAddrStrList(ReadyBlock readyBlock) {
 
-		ArrayList<Txo> inList = readyBlock.getInList();
-		ArrayList<Txo> outList = readyBlock.getOutList();
+		ArrayList<Cash> inList = readyBlock.getInList();
+		ArrayList<Cash> outList = readyBlock.getOutList();
 
 		Set<String> addrStrSet = new HashSet<String>();
 
-		for (Txo in : inList)
+		for (Cash in : inList)
 			addrStrSet.add(in.getAddr());
-		for (Txo out : outList)
+		for (Cash out : outList)
 			addrStrSet.add(out.getAddr());
 
 		List<String> addrStrList = new ArrayList<String>(addrStrSet);

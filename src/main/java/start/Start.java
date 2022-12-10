@@ -16,7 +16,7 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import data.Block;
 import esClient.Indices;
 import esClient.StartClient;
-import parse.MainParser;
+import parse.ChainParser;
 import parse.Preparer;
 import tools.OpReFileTools;
 import tools.ParseTools;
@@ -31,7 +31,6 @@ public class Start {
 
 		StartClient startMyEsClient = new StartClient();
 		ElasticsearchClient esClient = null;
-		PathAndHeight pathAndHeight = new PathAndHeight();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		
@@ -45,12 +44,14 @@ public class Start {
 			System.out.println("	2 Create a Java HTTPS client");
 			System.out.println("	3 Start New Parse");
 			System.out.println("	4 Restart from interruption");
-			System.out.println("	5 Manual start from a point");
+			System.out.println("	5 Manual start from a height");
 			System.out.println("	6 Config");
 			System.out.println("	0 exit");	
 			
 			int choice = choose();
 			
+			String path;
+			long bestHeight;
 			switch(choice) {
 			case 1:
 				startMyEsClient.setParams(config.getIp(),config.getPort());
@@ -80,14 +81,14 @@ public class Start {
 						
 						deleteOpReFiles();
 						
-						pathAndHeight.setPath(config.getPath());
-						pathAndHeight.setBestHeight(-1);
+						path = config.getPath();
+						bestHeight = -1;
 						
 						Indices.deleteAllIndices(esClient);
 						
 						java.util.concurrent.TimeUnit.SECONDS.sleep(3);
 						Indices.createAllIndices(esClient);
-						new Preparer().prepare(esClient,pathAndHeight);
+						new Preparer().prepare(esClient,path,bestHeight);
 						break;
 					}else break;
 				}else break;
@@ -104,15 +105,14 @@ public class Start {
 				if (restart.equals("y")) {	
 					
 					Block bestBlock = ParseTools.getBestBlock(esClient);
-					long bestHeight = bestBlock.getHeight();
+					bestHeight = bestBlock.getHeight();
 					
-					System.out.println("Restarting from BestHeight: "+bestHeight+" ...");
-					java.util.concurrent.TimeUnit.SECONDS.sleep(1);
+					System.out.println("Restarting from BestHeight: "+(bestHeight-1)+" ...");
 					
-					pathAndHeight.setPath(config.getPath());
-					pathAndHeight.setBestHeight(bestHeight-1);
+					path = config.getPath();
+					bestHeight = bestHeight-1;
 					
-					new Preparer().prepare(esClient,pathAndHeight);
+					new Preparer().prepare(esClient,path,bestHeight);
 					break;
 				}else break;
 				
@@ -123,9 +123,9 @@ public class Start {
 					System.out.println("\nInput the number of the height:");
 					sc.next();
 				}	
-				pathAndHeight.setPath(config.getPath());
-				pathAndHeight.setBestHeight(sc.nextLong());
-				new Preparer().prepare(esClient,pathAndHeight);
+				path = config.getPath();
+				bestHeight = sc.nextLong();
+				new Preparer().prepare(esClient,path, bestHeight);
 				break;
 			case 6:
 				Configer.config(sc,br);
@@ -143,7 +143,7 @@ public class Start {
 	
 	private static void deleteOpReFiles() {
 		
-		String fileName = MainParser.OpRefileName;
+		String fileName = ChainParser.OpRefileName;
 		File file;
 		
 		while(true) {

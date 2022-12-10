@@ -36,6 +36,8 @@ public class RollBacker {
 			return true;
 		}
 		
+		System.out.println("Rollback to : "+ lastHeight  + " ...");
+		
 		recoverAddress(esClient, lastHeight);
 		
 		recoverStxoToUtxo(esClient, lastHeight);
@@ -199,7 +201,7 @@ public class RollBacker {
 			fieldValueList.add(FieldValue.of(iter.next()));
 		
 		SearchResponse<Void> response = esClient.search(s->s
-				.index(Indices.TxoIndex)
+				.index(Indices.CashIndex)
 				.query(q->q.bool(b->b
 						.must(m->m.range(r->r.field("spentHeight").lte(JsonData.of(lastHeight))))
 						.must(m1->m1.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight)))))
@@ -289,7 +291,7 @@ public class RollBacker {
 
 	private void recoverStxoToUtxo(ElasticsearchClient esClient, long lastHeight) throws Exception {		
 		esClient.updateByQuery(u->u
-				.index(Indices.TxoIndex)
+				.index(Indices.CashIndex)
 				.query(q->q.bool(b->b
 						.must(m->m.range(r->r.field("spentHeight").gt(JsonData.of(lastHeight))))
 						.must(m1->m1.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight))))))
@@ -323,7 +325,7 @@ public class RollBacker {
 		deleteHeigherThan(esClient,Indices.TxIndex,"height",lastHeight);
 	}
 	private void deleteUtxos(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.TxoIndex,"birthHeight",lastHeight);
+		deleteHeigherThan(esClient,Indices.CashIndex,"birthHeight",lastHeight);
 	}
 	private void deleteNewAddresses(ElasticsearchClient esClient, long lastHeight) throws Exception {
 		deleteHeigherThan(esClient,Indices.AddressIndex,"birthHeight",lastHeight);

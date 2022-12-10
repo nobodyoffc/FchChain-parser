@@ -1,6 +1,6 @@
 package data;
 
-public class Txo {
+public class Cash {
 	
 	//calculated
 	private String id;	//hash of this output: sha256(sha256(tx + index)).
@@ -27,10 +27,7 @@ public class Txo {
 
 	private long cdd;		//CoinDays Destroyed
 	private long cd;		//CoinDays
-	private boolean utxo;
-	
-	
-	
+	private boolean valid;
 	public String getId() {
 		return id;
 	}
@@ -145,14 +142,10 @@ public class Txo {
 	public void setCd(long cd) {
 		this.cd = cd;
 	}
-	public boolean isUtxo() {
-		return utxo;
+	public boolean isValid() {
+		return valid;
 	}
-	public void setUtxo(boolean utxo) {
-		this.utxo = utxo;
+	public void setValid(boolean valid) {
+		this.valid = valid;
 	}
-	
-	
-	
-
 }
