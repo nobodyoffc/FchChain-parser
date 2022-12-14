@@ -11,8 +11,8 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import data.Block;
-import esClient.Indices;
 import io.netty.buffer.Unpooled;
+import writeEs.Indices;
 
 public class ParseTools {
 	

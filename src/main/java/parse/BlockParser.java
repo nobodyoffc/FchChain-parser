@@ -28,7 +28,7 @@ public class BlockParser {
 		block.setSize(blockMark.getSize());
 
 		ByteArrayInputStream blockInputStream = new ByteArrayInputStream(blockBytes);
-
+		
 		byte[] blockHeadBytes = new byte[80];
 		blockInputStream.read(blockHeadBytes);
 		
@@ -38,7 +38,11 @@ public class BlockParser {
 		block = parseBlockHead(blockHeadBytes, block);
 
 		ReadyBlock readyBlock = parseBlockBody(blockBodyBytes, block);
-
+		
+		//TODO
+		//System.out.println("[parseBlock]blockBodyBytes.length: "+ blockBodyBytes.length);
+		//tools.ParseTools.gsonPrint(readyBlock);
+		
 		readyBlock.setBlockMark(blockMark);
 
 		return readyBlock;
@@ -108,7 +112,6 @@ public class BlockParser {
 		txResult = parseCoinbase(blockInputStream, block);
 
 		txList.add(txResult.tx);
-		// txHasList.add(txResult.txHas);
 		outList.addAll(txResult.outList);
 
 		for (int i = 1; i < txCount; i++) {

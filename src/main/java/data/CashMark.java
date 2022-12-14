@@ -1,6 +1,6 @@
 package data;
 
-public class TxoMark {
+public class CashMark {
 	private String id;		//input id, the hash of previous txid and index, e.g. the first 32+4 bytes of the input.
 	private String addr;	//input address
 	private long value;		//input value

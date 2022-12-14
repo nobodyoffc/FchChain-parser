@@ -8,8 +8,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,7 +50,6 @@ import data.Block;
 import data.BlockMark;
 import data.Cash;
 import esClient.EsTools;
-import esClient.Indices;
 import esClient.EsTools.MgetResult;
 import parse.Preparer;
 import esClient.StartClient;
@@ -59,6 +60,7 @@ import tools.FchTools;
 import tools.Hash;
 import tools.ParseTools;
 import writeEs.CdMaker;
+import writeEs.Indices;
 
 public class mainTest {
 	public static final int FILE_END = -1;
@@ -82,12 +84,13 @@ public class mainTest {
 //		List<HealthRecord> vb = ch.valueBody();
 //		System.out.println("ES Client was created. The cluster is: " + vb.get(0).cluster());
 //		////////////////////
+		System.out.print(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
 
-		String path = "/Users/liuchangyong/fc_data/blocks/";
-		//String path = "/home/carmx/fc_data/blocks/";
-		new PreparerTest().prepare(null, path, -1) ;
-
-	//	System.out.println("result:" + gson.toJson(result));
+		
+		//date
+		
+		
+		//	System.out.println("result:" + gson.toJson(result));
 
 		//esClient.shutdown();
 

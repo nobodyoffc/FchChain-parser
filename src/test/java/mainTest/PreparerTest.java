@@ -14,8 +14,8 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
 import data.BlockMark;
 import esClient.EsTools;
-import esClient.Indices;
 import tools.BlockFileTools;
+import writeEs.Indices;
 import writeEs.RollBacker;
 
 

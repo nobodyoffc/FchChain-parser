@@ -4,8 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
@@ -18,8 +20,6 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import data.Block;
 import data.BlockMark;
-import esClient.EsTools;
-import esClient.Indices;
 
 import tools.BytesTools;
 import tools.BlockFileTools;
@@ -29,6 +29,7 @@ import tools.ParseTools;
 import writeEs.BlockMaker;
 import writeEs.BlockWriter;
 import writeEs.CdMaker;
+import writeEs.Indices;
 import writeEs.RollBacker;
 
 public class ChainParser {
@@ -81,11 +82,12 @@ public class ChainParser {
 					log.info("Started parsing file: {} ...",Preparer.CurrentFile);
 					continue;
 				}else {
-				System.out.println("Waiting 30 seconds for new file ...");	
-				TimeUnit.SECONDS.sleep(30);
-				fis.close();
-				fis = new FileInputStream(file);
-				fis.skip(Preparer.Pointer);
+					System.out.print(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
+					System.out.println(" Waiting 30 seconds for new file ...");	
+					TimeUnit.SECONDS.sleep(30);
+					fis.close();
+					fis = new FileInputStream(file);
+					fis.skip(Preparer.Pointer);
 				}
 			}else 
 			if(blockLength == WRONG ) {
@@ -100,7 +102,8 @@ public class ChainParser {
 				fis.skip(Preparer.Pointer);
 				
 			}else if(blockLength == WAIT_MORE) {
-				System.out.println("Waiting 30 seconds. pointer: "+Preparer.Pointer);
+				System.out.print(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
+				System.out.println(" Waiting 30 seconds. pointer: "+Preparer.Pointer);
 				TimeUnit.SECONDS.sleep(30);
 				fis.close();
 				fis = new FileInputStream(file);
@@ -118,7 +121,6 @@ public class ChainParser {
 			long now = System.currentTimeMillis();
 			if( now - cdMakeTime > (1000*60*60*12)) {
 				Block bestBlock = ParseTools.getBestBlock(esClient);
-				long bestBlockTime = bestBlock.getTime();
 				
 				CdMaker cdMaker = new CdMaker();
 
@@ -273,7 +275,7 @@ public class ChainParser {
 				.index(Indices.BlockMarkIndex).id(blockMark.getId()).document(blockMark));
 	}	
 	private boolean isForkOverMain(BlockMark blockMark) {
-		 //TODO /mainList.get(Preparer.mainList.size()-1).getHeight();
+
 		if(blockMark.getHeight() > Preparer.BestHeight) return true;
 		return false;
 	}
@@ -295,7 +297,7 @@ public class ChainParser {
 		
 		while(true) {
 			foundFormerForkBlockMark = false;
-			for(int i=Preparer.forkList.size()-1;i>=0;i--) {  //TODO forkList为空
+			for(int i=Preparer.forkList.size()-1;i>=0;i--) {  
 				forkBlock = Preparer.forkList.get(i);
 				if(forkBlock.getId().equals(preId)) {
 					winList.add(forkBlock);
@@ -345,7 +347,6 @@ public class ChainParser {
 			System.out.println("Reorganized. Fork: "+Preparer.forkList.size()+" Height: "+heightBeforeFork);
 	}
 	private void treatLoseList( ElasticsearchClient esClient,ArrayList<BlockMark> loseList) throws ElasticsearchException, IOException {
-		// TODO Auto-generated method stub
 		
 		BulkRequest.Builder br = new BulkRequest.Builder();
 		Preparer.mainList.removeAll(loseList);
@@ -362,7 +363,7 @@ public class ChainParser {
 		esClient.bulk(br.build());
 	}
 	private void treatWinList(ElasticsearchClient esClient, ArrayList<BlockMark> winList) throws Exception {
-		// TODO Auto-generated method stub
+
 		Preparer.forkList.removeAll(winList);
 		
 		for(int i=winList.size()-1;i>=0;i--) {
@@ -509,7 +510,6 @@ public class ChainParser {
 					
 					bestBlockMark = Preparer.mainList.get(Preparer.mainList.size()-1);
 					
-					//TODO
 					if(bestBlockMark.getId()!= Preparer.BestHash) {
 						System.out.println("BestHash "+Preparer.BestHash+" is not the same as mainList:"+bestBlockMark.getId());
 						throw new Exception("BestHash "+Preparer.BestHash+" is not the same as mainList:"+bestBlockMark.getId());

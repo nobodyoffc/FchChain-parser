@@ -18,9 +18,8 @@ import data.Tx;
 import data.TxHas;
 import data.TxMark;
 import data.Cash;
-import data.TxoMark;
+import data.CashMark;
 import esClient.EsTools;
-import esClient.Indices;
 import esClient.EsTools.MgetResult;
 import parse.ReadyBlock;
 import tools.FchTools;
@@ -28,6 +27,8 @@ import tools.FchTools;
 public class BlockMaker {
 
 	public ReadyBlock makeReadyBlock(ElasticsearchClient esClient, ReadyBlock rawBlock) throws Exception {
+		//TODO
+		//System.out.println("[makeReadyBloc]Address 0 in rawBlock: "+ rawBlock.getOutList().get(0).getAddr());
 
 		if (rawBlock.getInList() == null || rawBlock.getInList().isEmpty()) {
 
@@ -132,8 +133,8 @@ public class BlockMaker {
 			txMap.put(tx.getId(), tx);
 
 			TxHas txHas = new TxHas();
-			ArrayList<TxoMark> inMarks = new ArrayList<TxoMark>();
-			ArrayList<TxoMark> outMarks = new ArrayList<TxoMark>();
+			ArrayList<CashMark> inMarks = new ArrayList<CashMark>();
+			ArrayList<CashMark> outMarks = new ArrayList<CashMark>();
 			txHas.setId(tx.getId());
 			txHas.setHeight(tx.getHeight());
 			txHas.setInMarks(inMarks);
@@ -151,7 +152,7 @@ public class BlockMaker {
 				tx.setCdd(tx.getCdd() + cdd);
 
 				TxHas txHas = txHasMap.get(in.getSpentTxId());
-				TxoMark inMark = new TxoMark();
+				CashMark inMark = new CashMark();
 				inMark.setId(in.getId());
 				inMark.setAddr(in.getAddr());
 				inMark.setValue(in.getValue());
@@ -167,7 +168,7 @@ public class BlockMaker {
 			tx.setOutValueT(tx.getOutValueT() + value);
 
 			TxHas txHas = txHasMap.get(out.getTxId());
-			TxoMark outMark = new TxoMark();
+			CashMark outMark = new CashMark();
 			outMark.setId(out.getId());
 			outMark.setAddr(out.getAddr());
 			outMark.setValue(out.getValue());
@@ -193,7 +194,7 @@ public class BlockMaker {
 				String signer = txHasMap.get(txId).getInMarks().get(0).getAddr();
 				opReturn.setSigner(signer);
 
-				for (TxoMark txoB : txHasMap.get(txId).getOutMarks()) {
+				for (CashMark txoB : txHasMap.get(txId).getOutMarks()) {
 					String addr = txoB.getAddr();
 					if (!addr.equals(signer) && !addr.equals("unknown") && !addr.equals("OpReturn")) {
 						opReturn.setRecipient(addr);
@@ -267,6 +268,8 @@ public class BlockMaker {
 	private ReadyBlock makeAddress(ElasticsearchClient esClient, ReadyBlock readyBlock) throws Exception {
 
 		List<String> addrStrList = getAddrStrList(readyBlock);
+		
+		
 		ArrayList<Address> addrList = readAddrListFromEs(esClient, addrStrList);
 
 		Map<String, Address> addrMap = new HashMap<String, Address>();
@@ -280,7 +283,7 @@ public class BlockMaker {
 		for (TxHas txHas : txHasList) {
 
 			if (txHas.getInMarks() != null && !txHas.getInMarks().isEmpty()) {
-				for (TxoMark inb : txHas.getInMarks()) {
+				for (CashMark inb : txHas.getInMarks()) {
 					String inAddr = inb.getAddr();
 					long inValue = inb.getValue();
 					long cdd = inb.getCdd();
@@ -297,15 +300,15 @@ public class BlockMaker {
 						Iterator<Cash> iter = inList.iterator();
 						while (iter.hasNext()) {
 							Cash in = iter.next();
-							if (in.getAddr().equals(addr.getId()) && in.getType() == "P2PKH") {
-								setPKAndMoreAddrs(addr, in.getUnlockScript());
+							if (in.getAddr().equals(addr.getId()) && in.getType().equals("P2PKH")) {
+								addr = setPKAndMoreAddrs(addr, in.getUnlockScript());
 								break;
 							}
 						}
 					}
 				}
 			}
-			for (TxoMark outb : txHas.getOutMarks()) {
+			for (CashMark outb : txHas.getOutMarks()) {
 				String outAddr = outb.getAddr();
 				long outValue = outb.getValue();
 				Address addr = addrMap.get(outAddr);
@@ -344,6 +347,8 @@ public class BlockMaker {
 
 		ArrayList<Cash> inList = readyBlock.getInList();
 		ArrayList<Cash> outList = readyBlock.getOutList();
+		//TODO
+		//System.out.println("[ getAddrStrList]Address 0 in rawBlock: "+ outList.get(0).getAddr());
 
 		Set<String> addrStrSet = new HashSet<String>();
 
@@ -359,6 +364,8 @@ public class BlockMaker {
 
 	private ArrayList<Address> readAddrListFromEs(ElasticsearchClient esClient, List<String> addrStrList)
 			throws Exception {
+		//TODO
+		//System.out.println("[ readAddrListFromEs] Address 0 in rawBlock: "+ addrStrList.get(0));
 
 		MgetResult<Address> addrMgetResult = EsTools.getMultiByIdList(esClient, Indices.AddressIndex, addrStrList,
 				Address.class);
@@ -380,9 +387,8 @@ public class BlockMaker {
 		return addrList;
 	}
 
-	private Address setPKAndMoreAddrs(Address addr1, String unLockScript) {
+	private Address setPKAndMoreAddrs(Address addr, String unLockScript) {
 
-		Address addr = addr1;
 		String pk = FchTools.parsePkFromUnlockScript(unLockScript);
 		addr.setPubkey(pk);
 		addr.setBtcAddr(FchTools.pubKeyToBtcAddr(pk));

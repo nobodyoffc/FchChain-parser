@@ -1,4 +1,4 @@
-package esClient;
+package writeEs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

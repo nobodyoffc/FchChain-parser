@@ -41,7 +41,6 @@ import data.Address;
 import data.BlockMark;
 import data.Cash;
 import esClient.EsTools;
-import esClient.Indices;
 import esClient.StartClient;
 import esClient.EsTools.MgetResult;
 import parse.Preparer;
@@ -51,6 +50,7 @@ import testDataMaker.DataMaker;
 import tools.BytesTools;
 import tools.FchTools;
 import tools.ParseTools;
+import writeEs.Indices;
 
 public class Tested {
 	private static final Logger log = LoggerFactory.getLogger(Tested.class);

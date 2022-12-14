@@ -5,8 +5,8 @@ import java.util.ArrayList;
 public class TxHas {
 	private String id;			//txid
 	private long height;		//height
-	private ArrayList<TxoMark> inMarks;
-	private  ArrayList<TxoMark> outMarks;
+	private ArrayList<CashMark> inMarks;
+	private  ArrayList<CashMark> outMarks;
 	
 	public String getId() {
 		return id;
@@ -20,16 +20,16 @@ public class TxHas {
 	public void setHeight(long height) {
 		this.height = height;
 	}
-	public ArrayList<TxoMark> getInMarks() {
+	public ArrayList<CashMark> getInMarks() {
 		return inMarks;
 	}
-	public void setInMarks(ArrayList<TxoMark> inMarks) {
+	public void setInMarks(ArrayList<CashMark> inMarks) {
 		this.inMarks = inMarks;
 	}
-	public ArrayList<TxoMark> getOutMarks() {
+	public ArrayList<CashMark> getOutMarks() {
 		return outMarks;
 	}
-	public void setOutMarks(ArrayList<TxoMark> outMarks) {
+	public void setOutMarks(ArrayList<CashMark> outMarks) {
 		this.outMarks = outMarks;
 	}
 }

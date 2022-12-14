@@ -1,16 +1,13 @@
 package tools;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 
 import data.OpReturn;
 import parse.ChainParser;
-import parse.ResultReadOpReFromFile;
 
 public class OpReFileTools {
 
@@ -55,95 +52,6 @@ public class OpReFileTools {
 		}
 		opos.flush();
 		opos.close();
-	}
-	
-	public ResultReadOpReFromFile readOpReturnFromFileToList(long pointerInFile,int countWanted) throws IOException{
-
-		long pointer = pointerInFile;
-		
-		String fileName = ChainParser.OpRefileName;
-		File opFile;
-		
-		opFile = new File(fileName);
-		FileInputStream opis;
-			opis = new FileInputStream(opFile);
-			opis.skip(pointer);
-
-		
-		ArrayList<OpReturn> opList = new ArrayList<OpReturn>();
-		int count = 0;
-		boolean fileEnd = false;
-		
-		while(pointerInFile < opFile.length() && count < countWanted) {
-					
-			OpReturn op = new OpReturn();
-			
-			byte[] length = new byte[4];
-			int end = opis.read(length);
-			if(end == -1) {
-				System.out.println("OpReturn File was parsed completely.");
-				fileEnd = true;
-				break;
-			}
-			
-			int opLength = BytesTools.bytesToIntBE(length);
-			
-			byte[] opbytes = new byte[opLength];
-			opis.read(opbytes);
-			
-			pointerInFile += opLength;
-			
-			int offset=0;
-			
-			byte[] txidArr = Arrays.copyOfRange(opbytes, offset, offset+32);
-			offset+=32;	
-			op.setId(BytesTools.bytesToHexStringBE(txidArr));
-			
-			byte[] heiArr = Arrays.copyOfRange(opbytes, offset, offset+8);
-			offset+=8;	
-			op.setHeight(BytesTools.bytes8ToLong(heiArr,false));
-			
-			//If rollback record?
-			//如果不是回滚记录点
-			if(opLength>40) {
-			
-				byte[] txIndexArr = Arrays.copyOfRange(opbytes, offset, offset+4);
-				offset+=4;	
-				op.setTxIndex(BytesTools.bytesToIntBE(txIndexArr));
-				
-				byte[] signerArr = Arrays.copyOfRange(opbytes, offset, offset+34);
-				offset+=34;	
-				op.setSigner(new String(signerArr));
-				
-				byte[] recipientArr = Arrays.copyOfRange(opbytes, offset, offset+34);
-				offset+=34;	
-				op.setRecipient(new String(recipientArr));
-				if(op.getRecipient()=="                                  ")op.setRecipient(null);
-				
-				byte[] cddArr = Arrays.copyOfRange(opbytes, offset, offset+8);
-				offset+=8;	
-				op.setCdd(BytesTools.bytes8ToLong(cddArr,false));
-				
-				byte[] opReArr = Arrays.copyOfRange(opbytes, offset, opLength);
-				op.setOpReturn(new String(opReArr));
-			}
-
-			opList.add(op);
-		
-			count++;
-			if(count==countWanted) {
-				System.out.println(count + " opReturns had been pased.");
-				break;
-			}
-		}	
-		ResultReadOpReFromFile result = new ResultReadOpReFromFile();
-		result.opReturnList = opList;
-		result.pointerInFile = pointerInFile;
-		result.count = count;
-		result.fileEnd = fileEnd;
-		
-		opis.close();
-		return result;
 	}
 	
 	private static int getFileOrder(String currentFile) {	

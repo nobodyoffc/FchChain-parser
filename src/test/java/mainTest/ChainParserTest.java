@@ -18,7 +18,6 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import data.Block;
 import data.BlockMark;
 import esClient.EsTools;
-import esClient.Indices;
 import parse.Preparer;
 import parse.ReadyBlock;
 import tools.BytesTools;
@@ -29,6 +28,7 @@ import tools.ParseTools;
 import writeEs.BlockMaker;
 import writeEs.BlockWriter;
 import writeEs.CdMaker;
+import writeEs.Indices;
 import writeEs.RollBacker;
 
 public class ChainParserTest {

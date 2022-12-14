@@ -22,8 +22,9 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.json.JsonData;
 import data.OpReturn;
-import esClient.Indices;
+import parse.ChainParser;
 import tools.BytesTools;
+import tools.OpReFileTools;
 
 public class RollBacker {
 	private static final Logger log = LoggerFactory.getLogger(RollBacker.class);
@@ -304,7 +305,7 @@ public class RollBacker {
 						+ "ctx._source.sigHash=null;"
 						+ "ctx._source.sequence=null;"
 						+ "ctx._source.cdd=0;"
-						+ "ctx._source.utxo=true;"
+						+ "ctx._source.valid=true;"
 						)))
 				);
 	}
@@ -333,6 +334,19 @@ public class RollBacker {
 	private void deleteBlockMarks(ElasticsearchClient esClient, long lastHeight) throws Exception {
 		// TODO Auto-generated method stub
 		deleteHeigherThan(esClient,Indices.BlockMarkIndex,"height",lastHeight);
+		esClient.deleteByQuery(d->d
+				.index(Indices.BlockMarkIndex)
+				.query(q->q
+						.bool(b->b
+								.should(s->s
+										.range(r->r
+											.field("height")
+											.gt(JsonData.of(lastHeight))))
+								.should(s1->s1
+										.range(r1->r1
+											.field("orphanHeight")
+											.gt(JsonData.of(lastHeight))))))
+				);
 	}
 	private void deleteHeigherThan(ElasticsearchClient esClient, String index, String rangeField,long lastHeight) throws Exception {
 
@@ -348,17 +362,32 @@ public class RollBacker {
 	
 	private void recordInOpReturnFile(long lastHeight) throws IOException {
 		
+		String fileName = ChainParser.OpRefileName;
+		File opFile;
+		FileOutputStream opos;
+
+		while(true) {
+			opFile = new File(fileName);
+			if(opFile.length()>251658240) {
+				fileName =  OpReFileTools.getNextFile(fileName);
+			}else break;
+		}
+		if(opFile.exists()) {
+				opos = new FileOutputStream(opFile,true);
+		}else {
+			opos = new FileOutputStream(opFile);
+		}
+		
 		OpReturn opRollBack = new OpReturn();//rollbackMarkInOpreturn 
 		opRollBack.setHeight(lastHeight);
-
-		File opFile = new File("opreturn.byte");
-		FileOutputStream opos = new FileOutputStream(opFile,true);
 		
 		ArrayList<byte[]> opArrList = new ArrayList<byte[]>();
-		opArrList.add(BytesTools.intToByteArray(32));
+		opArrList.add(BytesTools.intToByteArray(40));
+		opArrList.add("Rollback........................".getBytes());
 		opArrList.add(BytesTools.longToBytes(opRollBack.getHeight()));
 		
 		opos.write(BytesTools.bytesMerger(opArrList));
+		opos.flush();
 		opos.close();
 	}
 

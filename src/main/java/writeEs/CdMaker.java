@@ -21,7 +21,6 @@ import co.elastic.clients.json.JsonData;
 import data.Address;
 import data.Block;
 import esClient.EsTools;
-import esClient.Indices;
 import parse.Preparer;
 
 public class CdMaker {
@@ -38,7 +37,7 @@ public class CdMaker {
 				.timeout(Time.of(t->t.time("1800s")))
 				.index(Indices.CashIndex)
 				.query(q -> q.bool(b -> b
-						.filter(f -> f.term(t -> t.field("utxo").value(true)))))
+						.filter(f -> f.term(t -> t.field("valid").value(true)))))
 				.script(s -> s.inline(i1 -> i1.source(
 						"ctx._source.cd = (long)(((long)((params.bestBlockTime - ctx._source.birthTime)/86400)*ctx._source.value)/100000000)")
 						.params("bestBlockTime", JsonData.of(bestBlockTime)))));
@@ -94,7 +93,7 @@ public class CdMaker {
 		}
 
 		SearchResponse<Address> response = esClient.search(
-				s -> s.index(Indices.CashIndex).size(0).query(q -> q.term(t -> t.field("utxo").value(true)))
+				s -> s.index(Indices.CashIndex).size(0).query(q -> q.term(t -> t.field("valid").value(true)))
 						.aggregations("filterByAddr",
 								a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
 										.aggregations("termByAddr",

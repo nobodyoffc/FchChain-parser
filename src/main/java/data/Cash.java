@@ -3,17 +3,17 @@ package data;
 public class Cash {
 	
 	//calculated
-	private String id;	//hash of this output: sha256(sha256(tx + index)).
+	private String id;	//hash of this cash: sha256(sha256(tx + index)).
 	
 	//from utxo
-	private int outIndex;		//index of output. Order in outputs of the tx when created.
+	private int outIndex;		//index of cash. Order in cashs of the tx when created.
 	private String type;	//type of the script. P2PKH,P2SH,OP_RETURN,Unknown,MultiSig
 	private String addr; 	//address
 	private long value;		//in satoshi
 	private String lockScript;	//LockScript
-	private String txId;		//txid, hash in whice this output was created.
-	private int txIndex;		//Order in block of the tx in which this output was created.
-	private long birthTime;		//Block time when this output is created.
+	private String txId;		//txid, hash in whice this cash was created.
+	private int txIndex;		//Order in block of the tx in which this cash was created.
+	private long birthTime;		//Block time when this cash is created.
 	private long birthHeight;		//Block height.
 	
 	//from input
@@ -27,7 +27,9 @@ public class Cash {
 
 	private long cdd;		//CoinDays Destroyed
 	private long cd;		//CoinDays
-	private boolean valid;
+	private boolean valid;	//Is this cash valid (utxo), or spent (stxo);
+	
+	
 	public String getId() {
 		return id;
 	}
