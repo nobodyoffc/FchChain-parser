@@ -30,7 +30,7 @@ If you only want to query information of FreeChain, you need't install FreeChain
 If you want run FreeChain to establish your own database service, you need install it as following:
 
 1. System requirement
-* Memory: 4G at lest.
+* Memory: 6G at lest.
 2. Install freecash full node and synchronize all blocks
 * Download freecash full node from: https://github.com/freecashorg/freecash
 * The default path of block files
@@ -67,6 +67,7 @@ keytool -importcert -file  [your ES path]/config/certs/http_ca.crt  -keystore [j
 * restart from interrupt
 	If FreeChain interrupted from running, you can restart it. The restarting progress will begin from the height before best height in case some data of last block was damaged in the interruption.
 	Some times, it may fail to link to the block chain. You can shut it down and restart again or manual restart from some further height. Generally, a successful restart will link new block to chain within 1 minute.
+	If the interruption is due to freecash node shutdown, when you restart freecash node, the last blk file will be reorganized to elimate fork block. So, to recover from such interruption, you need rollback to a height in the blk file before last file. You can find required infomation in "block_mark" index.
 
 ## ES Indices
 * FreeChain has 7 indices for data service:
