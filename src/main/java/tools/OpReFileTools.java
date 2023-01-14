@@ -11,7 +11,7 @@ import parse.ChainParser;
 
 public class OpReFileTools {
 
-	public void writeOpReturnListIntoFile(ArrayList<OpReturn> opList) throws IOException {
+	public void writeOpReturnListIntoFile(ArrayList<OpReturn> opList) throws IOException  {
 
 		if(opList==null || opList.isEmpty())return;
 		String fileName = ChainParser.OpRefileName;
@@ -25,7 +25,7 @@ public class OpReFileTools {
 				}else break;
 			}
 			if(opFile.exists()) {
-					opos = new FileOutputStream(opFile,true);
+				opos = new FileOutputStream(opFile,true);
 			}else {
 				opos = new FileOutputStream(opFile);
 			}
@@ -35,9 +35,10 @@ public class OpReFileTools {
 			ArrayList<byte[]> opArrList = new ArrayList<byte[]>();
 			OpReturn op = iterOp.next();
 			
-			opArrList.add(BytesTools.intToByteArray(120+op.getOpReturn().getBytes().length));
+			opArrList.add(BytesTools.intToByteArray(128+op.getOpReturn().getBytes().length));
 			opArrList.add(BytesTools.hexToByteArray(op.getId()));
 			opArrList.add(BytesTools.longToBytes(op.getHeight()));
+			opArrList.add(BytesTools.longToBytes(op.getTime()));
 			opArrList.add(BytesTools.intToByteArray(op.getTxIndex()));
 			opArrList.add(op.getSigner().getBytes());
 			if(op.getRecipient()==null || op.getRecipient().equals("nobody")) {

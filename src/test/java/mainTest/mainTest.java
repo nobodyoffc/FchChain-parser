@@ -84,7 +84,9 @@ public class mainTest {
 //		List<HealthRecord> vb = ch.valueBody();
 //		System.out.println("ES Client was created. The cluster is: " + vb.get(0).cluster());
 //		////////////////////
-		System.out.print(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
+		
+		String hash = Hash.Sha256x2("test update.");
+		System.out.print(hash);
 
 		
 		//date

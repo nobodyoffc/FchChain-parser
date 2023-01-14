@@ -283,7 +283,7 @@ public class BlockParser {
 				out.setType("P2SH");
 				out.setLockScript(BytesTools.bytesToHexStringBE(bScript));
 				byte[] hash160Bytes1 = Arrays.copyOfRange(bScript, 2, 22);
-				out.setAddr(FchTools.hash160ToFCHAddr(hash160Bytes1));
+				out.setAddr(FchTools.hash160ToMultiAddr(hash160Bytes1));
 				break;
 			default:
 				out.setType("Unknown");

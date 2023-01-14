@@ -189,12 +189,16 @@ public class BlockMaker {
 		
 			for (OpReturn opReturn : opList) {
 				String txId = opReturn.getId();
-
-				opReturn.setCdd(txMap.get(txId).getCdd());
-				String signer = txHasMap.get(txId).getInMarks().get(0).getAddr();
+				
+				Tx tx = txMap.get(txId);
+				opReturn.setCdd(tx.getCdd());
+				opReturn.setTime(tx.getBlockTime());
+				
+				TxHas txhas = txHasMap.get(txId);
+				String signer = txhas.getInMarks().get(0).getAddr();
 				opReturn.setSigner(signer);
 
-				for (CashMark txoB : txHasMap.get(txId).getOutMarks()) {
+				for (CashMark txoB : txhas.getOutMarks()) {
 					String addr = txoB.getAddr();
 					if (!addr.equals(signer) && !addr.equals("unknown") && !addr.equals("OpReturn")) {
 						opReturn.setRecipient(addr);
