@@ -394,6 +394,7 @@ public class BlockMaker {
 	private Address setPKAndMoreAddrs(Address addr, String unLockScript) {
 
 		String pk = FchTools.parsePkFromUnlockScript(unLockScript);
+		
 		addr.setPubkey(pk);
 		addr.setBtcAddr(FchTools.pubKeyToBtcAddr(pk));
 		addr.setEthAddr(FchTools.pubKeyToEthAddr(pk));

@@ -375,7 +375,8 @@ public class FchTools {
 	}
 	public static String pubKeyToEthAddr(String a) {
 		
-		String pubKey65 = recoverPK33ToPK65(a);
+		String pubKey65;
+		if(a.length()==130){pubKey65=a;}else{pubKey65 = recoverPK33ToPK65(a);}
 		
 		String pubKey63 = pubKey65.substring(2);
 		
