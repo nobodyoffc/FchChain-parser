@@ -42,10 +42,12 @@ If you want run FreeChain to establish your own database service, you need insta
 3. Install Java
 4. Install ElasticSearch and run it
 	To run a HTTPS ES java client, you need import certification of ES to java as bellow:
+
 ```
 keytool -importcert -file  [your ES path]/config/certs/http_ca.crt  -keystore [java home path]/lib/security/cacerts -storepass changeit -alias [giving a name whatever]
 
 ```
+
 	Without the certification you will meet an error of `javax.net.ssl.SSLHandshakeException: PKIX path building failed:...`
 	
 5. Run the jar file of FreeChain to parse blocks
@@ -88,64 +90,78 @@ When install freecash docker node, you should do as below:
 1. Create "fc_data" directory with newuser if you just installed freecash node and did not run it.
  
 2. If you had run freecash with root, copy block dir to newuser's home:
+
 ```
 	cp -r /root/fc_data/* /home/newuser/fc_data
 ```
 Change the owner to newuser
+
 ```
 	chown -R newuser:newuser /home/newuser/fc_data
 ```
 See the result:
-	```
+
+```
 	ls -l /home/newuser
 	drwxr-xr-x. 3 newuser  newuser   22 11月  4 12:21 fc_data
-	```
+```
 3. Check and remember the id of newuser
+
 ```
 	id newuser
 	uid=1000(newuser) gid=1000(newuser) group=100(newuser)
-	```
+```
 4. Run docker container
+
 ```
 	docker run -dit --name fc_miner --net=host -v /home/newuser/fc_data:/opt/newcoin fc.io:latest /bin/bash
-	```
+```
 	If cointainer has been existed, restart it:
+	
 ```
 	docker ps -a
-	```
+```
 	Get the id,then:
+	
 ```
 	docker start [id]
-	```
+```
+
 5. Add the same name of newuser within the container
+
 ```
 	useradd newuser
 ```
 6. Ensure newuser has the same id and password as the newuser out container: 
+
 ```
 	vi /etc/group
-	```
+```
 	Find the line where newuser locate in, and make sure id is 1000. If not change it.
 ```
 	vi /etc/passwd
-	```
+```
 	Find the line where newuser locate in, and make sure id is 1000. If not change it.
 7. login with newuser
+
 ```
 	su newuser
-	```
+```
 8. Start freecash node
+
 ```
 	freecashd -listen=0 -datadir=/opt/newcoin -logtimemicros -gen=0 -daemon
-	```
+```
 9. Check the blockchain info after a while of the node started 
+
 ```
 	freecash-cli -datadir=/opt/newcoin getblockchaininfo
-	```
+```
 
 ## Data request example
 
 Get the information of a address:
+
 ```
 https://154.221.22.19:9200/address/_doc/FPL44YJRwPdd2ipziFvqq6y2tw4VnVvpAv
 
@@ -154,6 +170,7 @@ Response:
 ```
 
 Get the information of a block:
+
 ```
 https://154.221.22.19:9200/block/_doc/0000000000001d7f6215b20c3723e43475bdc4464ed9358e65c2f85bd1ee5db7
 
