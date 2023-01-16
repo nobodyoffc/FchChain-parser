@@ -4,7 +4,7 @@
 
 FreeChain is a database of Freecash blockchain information.
 
-Besides general blockchain information, some important special information is also reached form FreeChain (see [Features](features)).
+Besides general blockchain information, some important special information is also reached from FreeChain (see [Features](features)).
 
 The data of FreeChain is parsed from Freecash blockchain data files begining with blk00000.dat, and keeping up to date.
 
