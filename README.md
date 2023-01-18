@@ -84,8 +84,8 @@ keytool -importcert -file  [your ES path]/config/certs/http_ca.crt  -keystore [j
 * CD field
 	- Address and cash has a field named `cd`. It is recalculate every 12 hours. 
 ## Deal with problems
-### Install with docker freecash node
-When install freecash docker node, you should do as below:
+### Install freecash node with docker
+When installing freecash docker node, you should do as below:
 
 1. Create "fc_data" directory with newuser if you just installed freecash node and did not run it.
  
