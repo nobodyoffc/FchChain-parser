@@ -39,10 +39,6 @@ public class BlockParser {
 
 		ReadyBlock readyBlock = parseBlockBody(blockBodyBytes, block);
 		
-		//TODO
-		//System.out.println("[parseBlock]blockBodyBytes.length: "+ blockBodyBytes.length);
-		//tools.ParseTools.gsonPrint(readyBlock);
-		
 		readyBlock.setBlockMark(blockMark);
 
 		return readyBlock;

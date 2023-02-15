@@ -8,6 +8,7 @@ import java.util.Map;
 import org.bitcoinj.core.ECKey;
 
 import io.github.novacrypto.base58.Base58;
+import tools.Bech32.Bech32Data;
 
 
 public class FchTools {
@@ -402,6 +403,15 @@ public class FchTools {
 		return address;
 	}
 
+	//TODO
+	public static String pubKeyToAtomAddr(String a) {	
+		byte[] sha256 = Hash.Sha256(BytesTools.hexToByteArray(a));		
+		byte[] ripemd160 = Hash.Ripemd160(sha256);		
+		String bech32Addr = Bech32.encode("cosmos", ripemd160);
+		return bech32Addr;
+	}
+
+	
 	public static String priKeyToPubKey(String priKey) {
 		// TODO Auto-generated method stub
 		//私钥如果长度为38字节，则为压缩格式。构成为：前缀80+32位私钥+压缩标志01+4位校验位。

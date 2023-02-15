@@ -35,19 +35,25 @@ public class Start {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		
 		log.info("Start.");
+		System.out.println(" << FreeChain >> v0.0.1 2023.1.24\n"	);
 		boolean more = true;
 		while(more) {		
 			Configer config = Configer.initial();
-			
-			System.out.println("\n\nInput the number you want to do:\n");	
-			System.out.println("	1 Create a Java HTTP client");
-			System.out.println("	2 Create a Java HTTPS client");
-			System.out.println("	3 Start New Parse");
-			System.out.println("	4 Restart from interruption");
-			System.out.println("	5 Manual start from a height");
-			System.out.println("	6 Config");
-			System.out.println("	0 exit");	
-			
+				
+			System.out.println(
+					"	-----------------------------\n"
+					+ "	Menu\n"
+					+ "	-----------------------------\n"
+					+"	1 Create a Java HTTP Client\n"
+					+"	2 Create a Java HTTPS Client\n"
+					+"	3 Start New Parse\n"
+					+"	4 Restart from interruption\n"
+					+"	5 Manual start from a height\n"
+					+"	6 Config\n"
+					+"	0 Exit\n"
+					+ "	-----------------------------"
+					);
+
 			int choice = choose();
 			
 			String path;

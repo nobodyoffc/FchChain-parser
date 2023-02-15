@@ -85,8 +85,11 @@ public class mainTest {
 //		System.out.println("ES Client was created. The cluster is: " + vb.get(0).cluster());
 //		////////////////////
 		
-		String hash = Hash.Sha256x2("test update.");
-		System.out.print(hash);
+//		String hash = Hash.Sha256x2("test update.");
+//		System.out.print(hash);
+		String pk = "020a6be4ed72a3317bc8d148a2604a2b31c2d2c07405cacfcd175b68b9445ce42e";
+		
+		FchTools.pubKeyToAtomAddr(pk);
 
 		
 		//date
