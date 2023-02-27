@@ -98,6 +98,9 @@ public class mainTest {
 		//	System.out.println("result:" + gson.toJson(result));
 
 		//esClient.shutdown();
+		
+		
+		
 
 	}
 	

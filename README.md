@@ -157,7 +157,15 @@ See the result:
 ```
 	freecash-cli -datadir=/opt/newcoin getblockchaininfo
 ```
+### ResponseException: [HTTP/1.1 429 Too Many Requests]
+When rollbacking, you may encount this error. To deal with it, set your ElasticSearch as following.
 
+```
+PUT _all/_settings
+{
+  "index.blocks.read_only_allow_delete": null
+}
+```
 ## Data request example
 
 Get the information of a address:

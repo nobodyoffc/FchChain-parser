@@ -47,41 +47,49 @@ public class RollBacker {
 			deleteBlocks(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteBlockHas(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteTxs(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteTxHas(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteOpReturns(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteUtxos(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteNewAddresses(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		try {
 			deleteBlockMarks(esClient, lastHeight);
 		} catch (Exception e) {
 			log.error("Error when deleting in rollback",e);
+			e.printStackTrace();
 		}
 		
 		
