@@ -232,6 +232,7 @@ public class BlockParser {
 			out.setOutIndex(j);
 			out.setTxIndex(tx.getTxIndex());
 			out.setBirthHeight(tx.getHeight());
+			out.setBlockId(tx.getBlockId());
 			out.setBirthTime(tx.getBlockTime());
 
 			// Read the value of this output in satoshi.
@@ -403,6 +404,7 @@ public class BlockParser {
 			Cash input = new Cash();
 
 			input.setSpentTime(tx.getBlockTime());
+			input.setBlockId(tx.getBlockId());
 			input.setSpentHeight(tx.getHeight());
 			input.setSpentIndex(j);
 			input.setValid(false);

@@ -13,6 +13,7 @@ public class Cash {
 	private String lockScript;	//LockScript
 	private String txId;		//txid, hash in whice this cash was created.
 	private int txIndex;		//Order in block of the tx in which this cash was created.
+	private String blockId;		//block ID, hash of block head
 	private long birthTime;		//Block time when this cash is created.
 	private long birthHeight;		//Block height.
 	
@@ -20,6 +21,7 @@ public class Cash {
 	private long spentTime;	//Block time when spent.
 	private String spentTxId;	//Tx hash when spent.
 	private long spentHeight; 	//Block height when spent.
+	private String spendBlockId;		//block ID, hash of block head
 	private int spentIndex;		//Order in inputs of the tx when spent.	
 	private String unlockScript;	//unlock script.
 	private String sigHash;	//sigHash.
@@ -28,8 +30,23 @@ public class Cash {
 	private long cdd;		//CoinDays Destroyed
 	private long cd;		//CoinDays
 	private boolean valid;	//Is this cash valid (utxo), or spent (stxo);
-	
-	
+
+	public String getBlockId() {
+		return blockId;
+	}
+
+	public void setBlockId(String blockId) {
+		this.blockId = blockId;
+	}
+
+	public String getSpendBlockId() {
+		return spendBlockId;
+	}
+
+	public void setSpendBlockId(String spendBlockId) {
+		this.spendBlockId = spendBlockId;
+	}
+
 	public String getId() {
 		return id;
 	}

@@ -81,7 +81,7 @@ public class Start {
 					if (delete.equals("y")) {	
 						File blk = new File(config.getPath(),"blk00000.dat");
 						if(!blk.exists()) {
-							System.out.println("blk00000.dat isn't found in "+config.getPath()+". Input 7 to config the path:");
+							System.out.println("blk00000.dat isn't found in "+config.getPath()+". Input 6 to config the path:");
 							break;
 						}
 						

@@ -23,11 +23,13 @@ import data.Cash;
 import esClient.EsTools;
 import parse.Preparer;
 import parse.ReadyBlock;
+import redis.clients.jedis.Jedis;
 import tools.OpReFileTools;
 
 public class BlockWriter {
 
 	private static final Logger log = LoggerFactory.getLogger(BlockWriter.class);
+	private static Jedis jedis = new Jedis();
 
 	public void writeIntoEs(ElasticsearchClient esClient, ReadyBlock readyBlock1,OpReFileTools opReFile) throws Exception {
 		ReadyBlock readyBlock = readyBlock1;	
@@ -56,7 +58,14 @@ public class BlockWriter {
 		putAddress(esClient, addrList, br);
 		putBlockMark(esClient, blockMark, br);
 		BulkResponse response = EsTools.bulkWithBuilder(esClient, br);
-		
+
+		try {
+			jedis.set("bestHeight", String.valueOf(block.getHeight()));
+			jedis.set("bestBlockId", block.getId());
+		}catch(Exception e){
+			log.warn("Redis isn't ready. Reading redis is ignored.");
+		}
+
 		System.out.println("Main chain linked. "
 				+"Orphan: "+Preparer.orphanList.size()
 				+" Fork: "+Preparer.forkList.size()

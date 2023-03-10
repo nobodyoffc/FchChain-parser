@@ -6,16 +6,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.json.JsonData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkRequest.Builder;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.MgetRequest;
-import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 
 public class EsTools {
@@ -94,7 +94,9 @@ public class EsTools {
 		
 		return result;
 	}
-	public static class MgetResult<E>{
+
+
+    public static class MgetResult<E>{
 		private List<String> missList;
 		private List<E> resultList;
 		
