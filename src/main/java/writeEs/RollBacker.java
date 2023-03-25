@@ -99,7 +99,7 @@ public class RollBacker {
 	}
 	
 	public long getBestHeight(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
-		SearchResponse<Void> response = esClient.search(s->s.index(Indices.BlockIndex).aggregations("bestHeight", a->a.max(m->m.field("height"))), void.class);		
+		SearchResponse<Void> response = esClient.search(s->s.index(IndicesFCH.BlockIndex).aggregations("bestHeight", a->a.max(m->m.field("height"))), void.class);
 		long bestHeight = (long)response.aggregations().get("bestHeight").max().value();
 		return bestHeight;
 	}
@@ -167,7 +167,7 @@ public class RollBacker {
 			}
 			
 			br.operations(o1->o1.update(u->u
-					.index(Indices.AddressIndex)
+					.index(IndicesFCH.AddressIndex)
 					.id(addr)
 					.action(a->a
 							.doc(updateMap)))
@@ -180,7 +180,7 @@ public class RollBacker {
 	private ArrayList<String> readAllAddrs(ElasticsearchClient esClient, long lastHeight) throws ElasticsearchException, IOException {
 		
 		SearchResponse<Void> response = esClient.search(s->s
-				.index(Indices.AddressIndex)
+				.index(IndicesFCH.AddressIndex)
 				.query(q->q
 						.bool(b->b.must(s1->s1.range(r->r.field("spentHeight").gt(JsonData.of(lastHeight))))
 								.must(s2->s2.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight))))
@@ -210,7 +210,7 @@ public class RollBacker {
 			fieldValueList.add(FieldValue.of(iter.next()));
 		
 		SearchResponse<Void> response = esClient.search(s->s
-				.index(Indices.CashIndex)
+				.index(IndicesFCH.CashIndex)
 				.query(q->q.bool(b->b
 						.must(m->m.range(r->r.field("spentHeight").lte(JsonData.of(lastHeight))))
 						.must(m1->m1.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight)))))
@@ -300,7 +300,7 @@ public class RollBacker {
 
 	private void recoverStxoToUtxo(ElasticsearchClient esClient, long lastHeight) throws Exception {		
 		esClient.updateByQuery(u->u
-				.index(Indices.CashIndex)
+				.index(IndicesFCH.CashIndex)
 				.query(q->q.bool(b->b
 						.must(m->m.range(r->r.field("spentHeight").gt(JsonData.of(lastHeight))))
 						.must(m1->m1.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight))))))
@@ -319,31 +319,29 @@ public class RollBacker {
 	}
 
 	private void deleteOpReturns(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.OpReturnIndex,"height",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.OpReturnIndex,"height",lastHeight);
 	}
 	private void deleteBlocks(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.BlockIndex,"height",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.BlockIndex,"height",lastHeight);
 	}
 	private void deleteBlockHas(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.BlockHasIndex,"height",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.BlockHasIndex,"height",lastHeight);
 	}
 	private void deleteTxHas(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.TxHasIndex,"height",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.TxHasIndex,"height",lastHeight);
 	}
 	private void deleteTxs(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.TxIndex,"height",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.TxIndex,"height",lastHeight);
 	}
 	private void deleteUtxos(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.CashIndex,"birthHeight",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.CashIndex,"birthHeight",lastHeight);
 	}
 	private void deleteNewAddresses(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		deleteHeigherThan(esClient,Indices.AddressIndex,"birthHeight",lastHeight);
+		deleteHeigherThan(esClient, IndicesFCH.AddressIndex,"birthHeight",lastHeight);
 	}
-	private void deleteBlockMarks(ElasticsearchClient esClient, long lastHeight) throws Exception {
-		// TODO Auto-generated method stub
-		deleteHeigherThan(esClient,Indices.BlockMarkIndex,"height",lastHeight);
+	private void deleteBlockMarks(ElasticsearchClient esClient, long lastHeight) throws IOException {
 		esClient.deleteByQuery(d->d
-				.index(Indices.BlockMarkIndex)
+				.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q
 						.bool(b->b
 								.should(s->s

@@ -14,7 +14,7 @@ public class Tx {
 	private int inCount;		//number of inputs
 	private long height;		//block height of the block
 	
-	private String opReMark; 	//Former 30 bytes of OP_RETURN data in String.
+	private String opReBrief; 	//Former 30 bytes of OP_RETURN data in String.
 	
 	//calculated
 	private long inValueT;		//total amount of inputs
@@ -104,11 +104,11 @@ public class Tx {
 	}
 
 	public String getOpReBrief() {
-		return opReMark;
+		return opReBrief;
 	}
 
 	public void setOpReBrief(String opReBrief) {
-		this.opReMark = opReBrief;
+		this.opReBrief = opReBrief;
 	}
 
 	public long getInValueT() {

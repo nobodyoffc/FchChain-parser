@@ -21,7 +21,6 @@ import co.elastic.clients.json.JsonData;
 import data.Address;
 import data.Block;
 import esClient.EsTools;
-import parse.Preparer;
 
 public class CdMaker {
 
@@ -35,7 +34,7 @@ public class CdMaker {
 		UpdateByQueryResponse response = esClient.updateByQuery(u -> u
 				.conflicts(Conflicts.Proceed)
 				.timeout(Time.of(t->t.time("1800s")))
-				.index(Indices.CashIndex)
+				.index(IndicesFCH.CashIndex)
 				.query(q -> q.bool(b -> b
 						.filter(f -> f.term(t -> t.field("valid").value(true)))))
 				.script(s -> s.inline(i1 -> i1.source(
@@ -54,7 +53,7 @@ public class CdMaker {
 		System.out.println("Make all cd of Addresses...");
 		
 		SearchResponse<Address> response = esClient.search(
-				s -> s.index(Indices.AddressIndex).size(EsTools.READ_MAX).sort(sort -> sort.field(f -> f.field("id"))),
+				s -> s.index(IndicesFCH.AddressIndex).size(EsTools.READ_MAX).sort(sort -> sort.field(f -> f.field("id"))),
 				Address.class);
 
 		ArrayList<Address> addrOldList = getResultAddrList(response);
@@ -66,7 +65,7 @@ public class CdMaker {
 				break;
 			Hit<Address> last = response.hits().hits().get(response.hits().hits().size() - 1);
 			String lastId = last.id();
-			response = esClient.search(s -> s.index(Indices.AddressIndex).size(5000)
+			response = esClient.search(s -> s.index(IndicesFCH.AddressIndex).size(5000)
 					.sort(sort -> sort.field(f -> f.field("id"))).searchAfter(lastId), Address.class);
 
 			addrOldList = getResultAddrList(response);
@@ -93,7 +92,7 @@ public class CdMaker {
 		}
 
 		SearchResponse<Address> response = esClient.search(
-				s -> s.index(Indices.CashIndex).size(0).query(q -> q.term(t -> t.field("valid").value(true)))
+				s -> s.index(IndicesFCH.CashIndex).size(0).query(q -> q.term(t -> t.field("valid").value(true)))
 						.aggregations("filterByAddr",
 								a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
 										.aggregations("termByAddr",
@@ -122,7 +121,7 @@ public class CdMaker {
 		for (String addr : addrSet) {
 			Map<String, Long> updateMap = new HashMap<String, Long>();
 			updateMap.put("cd", addrNewMap.get(addr));
-			br.operations(o -> o.update(u -> u.index(Indices.AddressIndex).id(addr).action(a -> a.doc(updateMap))));
+			br.operations(o -> o.update(u -> u.index(IndicesFCH.AddressIndex).id(addr).action(a -> a.doc(updateMap))));
 		}
 		EsTools.bulkWithBuilder(esClient, br);
 	}

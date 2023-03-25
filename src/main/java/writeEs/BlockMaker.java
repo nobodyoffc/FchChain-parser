@@ -69,7 +69,7 @@ public class BlockMaker {
 			outMap.put(out.getId(), out);
 		}
 
-		MgetResult<Cash> inMgetResult = EsTools.getMultiByIdList(esClient, Indices.CashIndex, inStrList, Cash.class);
+		MgetResult<Cash> inMgetResult = EsTools.getMultiByIdList(esClient, IndicesFCH.CashIndex, inStrList, Cash.class);
 		ArrayList<Cash> inOldList = (ArrayList<Cash>) inMgetResult.getResultList();
 		List<String> inNewIdList = inMgetResult.getMissList();
 
@@ -371,7 +371,7 @@ public class BlockMaker {
 		//TODO
 		//System.out.println("[ readAddrListFromEs] Address 0 in rawBlock: "+ addrStrList.get(0));
 
-		MgetResult<Address> addrMgetResult = EsTools.getMultiByIdList(esClient, Indices.AddressIndex, addrStrList,
+		MgetResult<Address> addrMgetResult = EsTools.getMultiByIdList(esClient, IndicesFCH.AddressIndex, addrStrList,
 				Address.class);
 
 		ArrayList<Address> addrOldList = (ArrayList<Address>) addrMgetResult.getResultList();

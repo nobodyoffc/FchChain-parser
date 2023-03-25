@@ -12,7 +12,7 @@ import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import data.Block;
 import io.netty.buffer.Unpooled;
-import writeEs.Indices;
+import writeEs.IndicesFCH;
 
 public class ParseTools {
 	
@@ -89,7 +89,7 @@ public class ParseTools {
 
 	public static Block getBestBlock(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
 		SearchResponse<Block> result = esClient.search(s->s
-				.index(Indices.BlockIndex)
+				.index(IndicesFCH.BlockIndex)
 				.size(1)
 				.sort(so->so.field(f->f.field("height").order(SortOrder.Desc)))
 				, Block.class);

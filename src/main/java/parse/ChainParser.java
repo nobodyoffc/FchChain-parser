@@ -26,11 +26,8 @@ import tools.BlockFileTools;
 import tools.Hash;
 import tools.OpReFileTools;
 import tools.ParseTools;
-import writeEs.BlockMaker;
-import writeEs.BlockWriter;
-import writeEs.CdMaker;
-import writeEs.Indices;
-import writeEs.RollBacker;
+import writeEs.*;
+import writeEs.IndicesFCH;
 
 public class ChainParser {
 	
@@ -272,7 +269,7 @@ public class ChainParser {
 
 	private void writeBlockMark(ElasticsearchClient esClient,BlockMark blockMark) throws ElasticsearchException, IOException {
 		esClient.index(i->i
-				.index(Indices.BlockMarkIndex).id(blockMark.getId()).document(blockMark));
+				.index(IndicesFCH.BlockMarkIndex).id(blockMark.getId()).document(blockMark));
 	}	
 	private boolean isForkOverMain(BlockMark blockMark) {
 
@@ -356,7 +353,7 @@ public class ChainParser {
 			bm.setStatus(Preparer.FORK);
 			Preparer.forkList.add(bm);
 			br.operations(op->op.index(in->in
-					.index(Indices.BlockMarkIndex)
+					.index(IndicesFCH.BlockMarkIndex)
 					.id(bm.getId())
 					.document(bm)));	
 		}	

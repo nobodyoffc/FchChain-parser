@@ -15,21 +15,14 @@ import org.slf4j.LoggerFactory;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
-import data.Block;
 import data.BlockMark;
 import esClient.EsTools;
-import parse.Preparer;
 import parse.ReadyBlock;
 import tools.BytesTools;
 import tools.BlockFileTools;
 import tools.Hash;
 import tools.OpReFileTools;
-import tools.ParseTools;
-import writeEs.BlockMaker;
-import writeEs.BlockWriter;
-import writeEs.CdMaker;
-import writeEs.Indices;
-import writeEs.RollBacker;
+import writeEs.IndicesFCH;
 
 public class ChainParserTest {
 	private enum CheckStatus{
@@ -575,7 +568,7 @@ public class ChainParserTest {
 			}
 			mainBlockMark.setStatus(PreparerTest.FORK);
 			br.operations(op->op.index(in->in
-					.index(Indices.BlockMarkIndex)
+					.index(IndicesFCH.BlockMarkIndex)
 					.id(mainBlockMark.getId())
 					.document(mainBlockMark)));	
 			mainToForkList.add(mainBlockMark);

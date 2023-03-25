@@ -44,13 +44,12 @@ import esClient.EsTools;
 import esClient.StartClient;
 import esClient.EsTools.MgetResult;
 import parse.Preparer;
-import start.Start;
 import testDataMaker.BlockParts;
 import testDataMaker.DataMaker;
 import tools.BytesTools;
 import tools.FchTools;
 import tools.ParseTools;
-import writeEs.Indices;
+import writeEs.IndicesFCH;
 
 public class Tested {
 	private static final Logger log = LoggerFactory.getLogger(Tested.class);
@@ -76,7 +75,7 @@ public class Tested {
 		UpdateByQueryResponse response = esClient.updateByQuery(u -> u
 				.conflicts(Conflicts.Proceed)
 				.timeout(Time.of(t->t.time("1800s")))
-				.index(Indices.CashIndex)
+				.index(IndicesFCH.CashIndex)
 				.query(q -> q.bool(b -> b
 						.filter(f -> f.term(t -> t.field("utxo").value(true)))))
 				.script(s -> s.inline(i1 -> i1.source(
@@ -98,7 +97,7 @@ public class Tested {
 
 		for (int i = 0;; i += 5000) {
 			long fromHeight = i;
-			esClient.updateByQuery(u -> u.index(Indices.CashIndex)
+			esClient.updateByQuery(u -> u.index(IndicesFCH.CashIndex)
 					.query(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("utxo").value(true)))
 							.must(m -> m.range(r -> r.field("birthHeight").gte(JsonData.of(fromHeight))
 									.lt(JsonData.of(fromHeight + 5000))))))
@@ -114,7 +113,7 @@ public class Tested {
 	
 	public static void makeAddrCd(ElasticsearchClient esClient) throws Exception {
 		SearchResponse<Address> response = esClient.search(
-				s -> s.index(Indices.AddressIndex).size(EsTools.READ_MAX).sort(sort -> sort.field(f -> f.field("id"))),
+				s -> s.index(IndicesFCH.AddressIndex).size(EsTools.READ_MAX).sort(sort -> sort.field(f -> f.field("id"))),
 				Address.class);
 
 		ArrayList<Address> addrOldList = getResultAddrList(response);
@@ -126,7 +125,7 @@ public class Tested {
 				break;
 			Hit<Address> last = response.hits().hits().get(response.hits().hits().size() - 1);
 			String lastId = last.id();
-			response = esClient.search(s -> s.index(Indices.AddressIndex).size(5000)
+			response = esClient.search(s -> s.index(IndicesFCH.AddressIndex).size(5000)
 					.sort(sort -> sort.field(f -> f.field("id"))).searchAfter(lastId), Address.class);
 
 			addrOldList = getResultAddrList(response);
@@ -155,7 +154,7 @@ public class Tested {
 		}
 
 		SearchResponse<Address> response = esClient.search(
-				s -> s.index(Indices.CashIndex).size(0).query(q -> q.term(t -> t.field("utxo").value(true)))
+				s -> s.index(IndicesFCH.CashIndex).size(0).query(q -> q.term(t -> t.field("utxo").value(true)))
 						.aggregations("filterByAddr",
 								a -> a.filter(f -> f.terms(t -> t.field("addr").terms(t1 -> t1.value(fieldValueList))))
 										.aggregations("termByAddr",
@@ -184,7 +183,7 @@ public class Tested {
 		for (String addr : addrSet) {
 			Map<String, Long> updateMap = new HashMap<String, Long>();
 			updateMap.put("cd", addrNewMap.get(addr));
-			br.operations(o -> o.update(u -> u.index(Indices.AddressIndex).id(addr).action(a -> a.doc(updateMap))));
+			br.operations(o -> o.update(u -> u.index(IndicesFCH.AddressIndex).id(addr).action(a -> a.doc(updateMap))));
 		}
 		EsTools.bulkWithBuilder(esClient, br);
 	}
@@ -278,7 +277,7 @@ public class Tested {
 		////////////////////
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.BlockMarkIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.BlockMarkIndex));
 
 			if (req.acknowledged()) {
 				log.info("Index  block_Mark deleted.");
@@ -288,7 +287,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.BlockIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.BlockIndex));
 
 			if (req.acknowledged()) {
 				log.info("Index  block deleted.");
@@ -298,7 +297,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.TxIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.TxIndex));
 			if (req.acknowledged()) {
 				log.info("Index tx deleted.");
 			}
@@ -307,7 +306,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.CashIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.CashIndex));
 			if (req.acknowledged()) {
 				log.info("Index txo delted.");
 			}
@@ -316,7 +315,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.AddressIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.AddressIndex));
 			if (req.acknowledged()) {
 				log.info("Index address deleted.");
 			}
@@ -325,7 +324,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.BlockHasIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.BlockHasIndex));
 			if (req.acknowledged()) {
 				log.info("Index block_has deleted.");
 			}
@@ -334,7 +333,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.TxHasIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.TxHasIndex));
 			if (req.acknowledged()) {
 				log.info("Index tx_has deleted.");
 			}
@@ -343,7 +342,7 @@ public class Tested {
 		}
 
 		try {
-			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(Indices.OpReturnIndex));
+			DeleteIndexResponse req = esClient.indices().delete(c -> c.index(IndicesFCH.OpReturnIndex));
 			if (req.acknowledged()) {
 				log.info("Index opreturn deleted.");
 			}
@@ -387,7 +386,7 @@ public class Tested {
 
 		try {
 			CreateIndexResponse req = esClient.indices()
-					.create(c -> c.index(Indices.BlockMarkIndex).withJson(blockMarkJsonStrIs));
+					.create(c -> c.index(IndicesFCH.BlockMarkIndex).withJson(blockMarkJsonStrIs));
 			blockMarkJsonStrIs.close();
 			if (req.acknowledged()) {
 				log.info("Index  block_mark created.");
@@ -399,7 +398,7 @@ public class Tested {
 
 		try {
 			CreateIndexResponse req = esClient.indices()
-					.create(c -> c.index(Indices.BlockIndex).withJson(blockJsonStrIs));
+					.create(c -> c.index(IndicesFCH.BlockIndex).withJson(blockJsonStrIs));
 			blockJsonStrIs.close();
 			if (req.acknowledged()) {
 				log.info("Index  block created.");
@@ -411,7 +410,7 @@ public class Tested {
 
 		try {
 			CreateIndexResponse req = esClient.indices()
-					.create(c -> c.index(Indices.BlockHasIndex).withJson(blockHasJsonStrIs));
+					.create(c -> c.index(IndicesFCH.BlockHasIndex).withJson(blockHasJsonStrIs));
 			blockHasJsonStrIs.close();
 
 			if (req.acknowledged()) {
@@ -426,7 +425,7 @@ public class Tested {
 		}
 
 		try {
-			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.TxIndex).withJson(txJsonStrIs));
+			CreateIndexResponse req = esClient.indices().create(c -> c.index(IndicesFCH.TxIndex).withJson(txJsonStrIs));
 			txJsonStrIs.close();
 
 			if (req.acknowledged()) {
@@ -439,7 +438,7 @@ public class Tested {
 
 		try {
 			CreateIndexResponse req = esClient.indices()
-					.create(c -> c.index(Indices.TxHasIndex).withJson(txHasJsonStrIs));
+					.create(c -> c.index(IndicesFCH.TxHasIndex).withJson(txHasJsonStrIs));
 			txHasJsonStrIs.close();
 
 			if (req.acknowledged()) {
@@ -451,7 +450,7 @@ public class Tested {
 		}
 
 		try {
-			CreateIndexResponse req = esClient.indices().create(c -> c.index(Indices.CashIndex).withJson(txoJsonStrIs));
+			CreateIndexResponse req = esClient.indices().create(c -> c.index(IndicesFCH.CashIndex).withJson(txoJsonStrIs));
 			txoJsonStrIs.close();
 
 			if (req.acknowledged()) {
@@ -464,7 +463,7 @@ public class Tested {
 
 		try {
 			CreateIndexResponse req = esClient.indices()
-					.create(c -> c.index(Indices.AddressIndex).withJson(addressJsonIs));
+					.create(c -> c.index(IndicesFCH.AddressIndex).withJson(addressJsonIs));
 			addressJsonIs.close();
 
 			if (req.acknowledged()) {
@@ -477,7 +476,7 @@ public class Tested {
 
 		try {
 			CreateIndexResponse req = esClient.indices()
-					.create(c -> c.index(Indices.OpReturnIndex).withJson(opreturnJsonStrIs));
+					.create(c -> c.index(IndicesFCH.OpReturnIndex).withJson(opreturnJsonStrIs));
 			opreturnJsonStrIs.close();
 			if (req.acknowledged()) {
 				log.info("Index opreturn created.");
@@ -512,7 +511,7 @@ public class Tested {
 			fieldValueList.add(FieldValue.of(iter.next()));
 
 		SearchResponse<Void> response = esClient.search(
-				s -> s.index(Indices.CashIndex)
+				s -> s.index(IndicesFCH.CashIndex)
 						.query(q -> q.bool(b -> b
 								.must(m -> m.range(r -> r.field("spentHeight").lte(JsonData.of(lastHeight))))
 								.must(m1 -> m1.range(r1 -> r1.field("birthHeight").lte(JsonData.of(lastHeight))))))
@@ -754,7 +753,7 @@ public class Tested {
 	public ArrayList<BlockMark> readForkList(ElasticsearchClient esClient, long bestHeight) throws ElasticsearchException, IOException {
 		// TODO Auto-generated method stub
 		//, MARK_FORK, "height",REOTG_PROTECT
-		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+		SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q
 						.range(r->r
 								.field("height")
@@ -779,7 +778,7 @@ public class Tested {
 	}
 	public ArrayList<BlockMark> readOrPhanList(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
 		// TODO Auto-generated method stub
-		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+		SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q
 						.term(t->t
 								.field("status")
@@ -806,7 +805,7 @@ public class Tested {
 	}
 	public ArrayList<BlockMark> readMainList(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
 		// TODO Auto-generated method stub
-		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+		SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q
 						.term(t->t
 								.field("status")

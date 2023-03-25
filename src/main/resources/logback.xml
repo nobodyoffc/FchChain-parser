@@ -27,11 +27,11 @@
         <encoder>
             <pattern>${log.pattern}</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <fcFilter class="ch.qos.logback.classic.fcFilter.LevelFilter">
             <level>DEBUG</level>
             <onMatch>ACCEPT</onMatch>
             <onMissMatch>DENY</onMissMatch>
-        </filter>
+        </fcFilter>
     </appender>
  
     <!-- INFO -->
@@ -47,11 +47,11 @@
         <encoder>
             <pattern>${log.pattern}</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <fcFilter class="ch.qos.logback.classic.fcFilter.LevelFilter">
             <level>INFO</level>
             <onMatch>ACCEPT</onMatch>
             <onMissMatch>DENY</onMissMatch>
-        </filter>
+        </fcFilter>
     </appender>
  
     <!-- ERROR -->
@@ -67,11 +67,11 @@
         <encoder>
             <pattern>${log.pattern}</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <fcFilter class="ch.qos.logback.classic.fcFilter.LevelFilter">
             <level>ERROR</level>
             <onMatch>ACCEPT</onMatch>
             <onMissMatch>DENY</onMissMatch>
-        </filter>
+        </fcFilter>
     </appender>
  
     <!-- 设置包com.xx.abc打印级别为debug -->

@@ -1,66 +1,11 @@
 package mainTest;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-
 //import com.xwc1125.chain5j.abi.datatypes.Address;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.Conflicts;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
-import co.elastic.clients.elasticsearch.cat.HealthResponse;
-import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.MgetRequest;
-import co.elastic.clients.elasticsearch.core.MgetResponse;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
-import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
-import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
-import co.elastic.clients.json.JsonData;
-import data.Address;
-import data.Block;
-import data.BlockMark;
-import data.Cash;
-import esClient.EsTools;
-import esClient.EsTools.MgetResult;
-import parse.Preparer;
-import esClient.StartClient;
-import testDataMaker.BlockParts;
-import testDataMaker.DataMaker;
-import tools.BytesTools;
-import tools.FchTools;
-import tools.Hash;
-import tools.ParseTools;
-import writeEs.CdMaker;
-import writeEs.Indices;
+        import tools.FchTools;
 
 public class mainTest {
 	public static final int FILE_END = -1;

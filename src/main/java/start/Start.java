@@ -19,7 +19,7 @@ import parse.ChainParser;
 import parse.Preparer;
 import tools.OpReFileTools;
 import tools.ParseTools;
-import writeEs.Indices;
+import writeEs.IndicesFCH;
 
 public class Start {
 	
@@ -90,10 +90,10 @@ public class Start {
 						path = config.getPath();
 						bestHeight = -1;
 						
-						Indices.deleteAllIndices(esClient);
+						IndicesFCH.deleteAllIndices(esClient);
 						
 						java.util.concurrent.TimeUnit.SECONDS.sleep(3);
-						Indices.createAllIndices(esClient);
+						IndicesFCH.createAllIndices(esClient);
 						new Preparer().prepare(esClient,path,bestHeight);
 						break;
 					}else break;

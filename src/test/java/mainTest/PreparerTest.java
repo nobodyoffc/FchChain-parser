@@ -15,7 +15,7 @@ import co.elastic.clients.json.JsonData;
 import data.BlockMark;
 import esClient.EsTools;
 import tools.BlockFileTools;
-import writeEs.Indices;
+import writeEs.IndicesFCH;
 import writeEs.RollBacker;
 
 
@@ -73,7 +73,7 @@ public class PreparerTest {
 
 		}else {
 			BestHeight = bestHeight;
-			SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+			SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 					.query(q->q.term(t->t.field("height").value(BestHeight)))
 					, BlockMark.class);
 			
@@ -98,7 +98,7 @@ public class PreparerTest {
 
 	private ArrayList<BlockMark> readForkList(ElasticsearchClient esClient, long bestHeight) throws ElasticsearchException, IOException {
 
-		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+		SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q.bool(b->b
 						.filter(f->f
 								.term(t->t.field("status").value("fork")))
@@ -125,7 +125,7 @@ public class PreparerTest {
 	}
 	private ArrayList<BlockMark> readOrphanList(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
 
-		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+		SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q
 						.term(t->t
 								.field("status")
@@ -152,7 +152,7 @@ public class PreparerTest {
 	}
 	private ArrayList<BlockMark> readMainList(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
 
-		SearchResponse<BlockMark> response = esClient.search(s->s.index(Indices.BlockMarkIndex)
+		SearchResponse<BlockMark> response = esClient.search(s->s.index(IndicesFCH.BlockMarkIndex)
 				.query(q->q
 						.term(t->t
 								.field("status")
