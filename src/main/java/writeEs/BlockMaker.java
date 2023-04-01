@@ -21,8 +21,9 @@ import data.Cash;
 import data.CashMark;
 import esClient.EsTools;
 import esClient.EsTools.MgetResult;
-import parse.ReadyBlock;
-import tools.FchTools;
+import parser.ReadyBlock;
+import fcTools.KeyTools;
+import fcTools.ParseTools;
 
 public class BlockMaker {
 
@@ -87,7 +88,7 @@ public class BlockMaker {
 			in.setTxIndex(out.getTxIndex());
 			in.setBirthTime(out.getBirthTime());
 			in.setBirthHeight(out.getBirthHeight());
-			in.setCdd(FchTools.cdd(in.getValue(), in.getBirthTime(), in.getSpentTime()));
+			in.setCdd(ParseTools.cdd(in.getValue(), in.getBirthTime(), in.getSpentTime()));
 
 			inMadeList.add(in);
 		}
@@ -104,7 +105,7 @@ public class BlockMaker {
 			in.setTxIndex(out.getTxIndex());
 			in.setBirthTime(out.getBirthTime());
 			in.setBirthHeight(out.getBirthHeight());
-			in.setCdd(FchTools.cdd(in.getValue(), in.getBirthTime(), in.getSpentTime()));
+			in.setCdd(ParseTools.cdd(in.getValue(), in.getBirthTime(), in.getSpentTime()));
 			outMap.remove(id);
 			inMadeList.add(in);
 		}
@@ -297,9 +298,9 @@ public class BlockMaker {
 					addr.setBalance(addr.getBalance() - inValue);
 					addr.setCdd(addr.getCdd() + cdd);
 					addr.setLastHeight(txHas.getHeight());
-					addr.setUtxo(addr.getUtxo() - 1);
+					addr.setCash(addr.getCash() - 1);
 
-					if (addr.getPubkey() == null) {
+					if (addr.getPubKey() == null) {
 						ArrayList<Cash> inList = readyBlock.getInList();
 						Iterator<Cash> iter = inList.iterator();
 						while (iter.hasNext()) {
@@ -319,7 +320,7 @@ public class BlockMaker {
 				addr.setIncome(addr.getIncome() + outValue);
 				addr.setBalance(addr.getBalance() + outValue);
 				addr.setLastHeight(txHas.getHeight());
-				addr.setUtxo(addr.getUtxo() + 1);
+				addr.setCash(addr.getCash() + 1);
 
 				if (addr.getBirthHeight() == 0 && (!addr.getId().equals("FTqiqAyXHnK7uDTXzMap3acvqADK4ZGzts")))
 					addr.setBirthHeight(txHas.getHeight());
@@ -393,14 +394,14 @@ public class BlockMaker {
 
 	private Address setPKAndMoreAddrs(Address addr, String unLockScript) {
 
-		String pk = FchTools.parsePkFromUnlockScript(unLockScript);
+		String pk = KeyTools.parsePkFromUnlockScript(unLockScript);
 		
-		addr.setPubkey(pk);
-		addr.setBtcAddr(FchTools.pubKeyToBtcAddr(pk));
-		addr.setEthAddr(FchTools.pubKeyToEthAddr(pk));
-		addr.setLtcAddr(FchTools.pubKeyToLtcAddr(pk));
-		addr.setDogeAddr(FchTools.pubKeyToDogeAddr(pk));
-		addr.setTrxAddr(FchTools.pubKeyToTrxAddr(pk));
+		addr.setPubKey(pk);
+		addr.setBtcAddr(KeyTools.pubKeyToBtcAddr(pk));
+		addr.setEthAddr(KeyTools.pubKeyToEthAddr(pk));
+		addr.setLtcAddr(KeyTools.pubKeyToLtcAddr(pk));
+		addr.setDogeAddr(KeyTools.pubKeyToDogeAddr(pk));
+		addr.setTrxAddr(KeyTools.pubKeyToTrxAddr(pk));
 		return addr;
 	}
 }

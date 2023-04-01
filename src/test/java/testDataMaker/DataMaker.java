@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import parse.ChainParser;
-import tools.BytesTools;
-import tools.BlockFileTools;
-import tools.Hash;
+import parser.ChainParser;
+import fcTools.BytesTools;
+import parser.BlockFileTools;
+import fcTools.Hash;
 
 public class DataMaker {
 

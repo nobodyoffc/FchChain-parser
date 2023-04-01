@@ -3,7 +3,7 @@ package data;
 public class Address {
 	
 	private String id;	//fch address
-	private String pubkey;		//public key
+	private String pubKey;		//public key
 	private long balance;		//value of fch in satoshi
 	private long income;		//total amount of fch received in satoshi
 	private long expend;		//total amount of fch payed in satoshi
@@ -12,7 +12,7 @@ public class Address {
 	private long lastHeight; 	//the height where this address info changed latest. If roll back happened, lastHei point to the lastHeight before fork.
 	private long cdd;		//the total amount of coindays destroyed
 	private long cd;		//CoinDays
-	private long utxo;		//Count of UTXO
+	private long cash;		//Count of UTXO
 
 	private String btcAddr;	//the btc address 
 	private String ethAddr;	//the eth address
@@ -36,12 +36,12 @@ public class Address {
 		this.id = addr;
 	}
 
-	public String getPubkey() {
-		return pubkey;
+	public String getPubKey() {
+		return pubKey;
 	}
 
-	public void setPubkey(String pubkey) {
-		this.pubkey = pubkey;
+	public void setPubKey(String pubKey) {
+		this.pubKey = pubKey;
 	}
 
 	public long getBalance() {
@@ -140,12 +140,12 @@ public class Address {
 		this.cd = cd;
 	}
 
-	public long getUtxo() {
-		return utxo;
+	public long getCash() {
+		return cash;
 	}
 
-	public void setUtxo(long utxo) {
-		this.utxo = utxo;
+	public void setCash(long cash) {
+		this.cash = cash;
 	}
 	
 }

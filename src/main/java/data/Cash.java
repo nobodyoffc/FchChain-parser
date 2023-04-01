@@ -1,28 +1,28 @@
 package data;
 
 public class Cash {
-	
+
 	//calculated
 	private String id;	//hash of this cash: sha256(sha256(tx + index)).
-	
+
 	//from utxo
 	private int outIndex;		//index of cash. Order in cashs of the tx when created.
 	private String type;	//type of the script. P2PKH,P2SH,OP_RETURN,Unknown,MultiSig
 	private String addr; 	//address
 	private long value;		//in satoshi
 	private String lockScript;	//LockScript
-	private String txId;		//txid, hash in whice this cash was created.
+	private String txId;		//txid, hash in which this cash was created.
 	private int txIndex;		//Order in block of the tx in which this cash was created.
 	private String blockId;		//block ID, hash of block head
 	private long birthTime;		//Block time when this cash is created.
 	private long birthHeight;		//Block height.
-	
+
 	//from input
 	private long spentTime;	//Block time when spent.
 	private String spentTxId;	//Tx hash when spent.
 	private long spentHeight; 	//Block height when spent.
 	private String spendBlockId;		//block ID, hash of block head
-	private int spentIndex;		//Order in inputs of the tx when spent.	
+	private int spentIndex;		//Order in inputs of the tx when spent.
 	private String unlockScript;	//unlock script.
 	private String sigHash;	//sigHash.
 	private String sequence;	//nSequence
@@ -30,6 +30,24 @@ public class Cash {
 	private long cdd;		//CoinDays Destroyed
 	private long cd;		//CoinDays
 	private boolean valid;	//Is this cash valid (utxo), or spent (stxo);
+
+	public Cash() {
+		// default constructor
+	}
+
+	public Cash(int outIndex, String type, String addr, long value, String lockScript, String txId, int txIndex,
+				String blockId, long birthTime, long birthHeight) {
+		this.outIndex = outIndex;
+		this.type = type;
+		this.addr = addr;
+		this.value = value;
+		this.lockScript = lockScript;
+		this.txId = txId;
+		this.txIndex = txIndex;
+		this.blockId = blockId;
+		this.birthTime = birthTime;
+		this.birthHeight = birthHeight;
+	}
 
 	public String getBlockId() {
 		return blockId;

@@ -1,33 +1,26 @@
-package parse;
+package parser;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import data.Block;
+import data.BlockMark;
+import fcTools.BytesTools;
+import fcTools.Hash;
+import fcTools.ParseTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import writeEs.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import data.Block;
-import data.BlockMark;
-
-import tools.BytesTools;
-import tools.BlockFileTools;
-import tools.Hash;
-import tools.OpReFileTools;
-import tools.ParseTools;
-import writeEs.*;
-import writeEs.IndicesFCH;
 
 public class ChainParser {
 	
@@ -42,7 +35,16 @@ public class ChainParser {
 	private static final Logger log = LoggerFactory.getLogger(ChainParser.class);
 	
 	private OpReFileTools opReFile = new OpReFileTools();
-	
+
+	public static data.Block getBestBlock(ElasticsearchClient esClient) throws ElasticsearchException, IOException {
+		SearchResponse<Block> result = esClient.search(s->s
+				.index(IndicesFCH.BlockIndex)
+				.size(1)
+				.sort(so->so.field(f->f.field("height").order(SortOrder.Desc)))
+				, Block.class);
+		return result.hits().hits().get(0).source();
+	}
+
 	public int startParse(ElasticsearchClient esClient) throws Exception {
 		
 		System.out.println("Started parsing file:  "+Preparer.CurrentFile+" ...");
@@ -57,6 +59,7 @@ public class ChainParser {
 		long cdMakeTime = System.currentTimeMillis();
 
 		while(true) {
+
 			CheckResult checkResult = checkBlock(fis);
 			BlockMark blockMark = checkResult.getBlockMark();
 			byte[] blockBytes = checkResult.getBlockBytes();	
@@ -80,14 +83,13 @@ public class ChainParser {
 					continue;
 				}else {
 					System.out.print(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
-					System.out.println(" Waiting 30 seconds for new file ...");	
+					System.out.println(" Waiting 30 seconds for new block file ...");
 					TimeUnit.SECONDS.sleep(30);
 					fis.close();
 					fis = new FileInputStream(file);
 					fis.skip(Preparer.Pointer);
 				}
-			}else 
-			if(blockLength == WRONG ) {
+			}else if(blockLength == WRONG ) {
 				System.out.println("Read Magic wrong. pointer: "+Preparer.Pointer);
 				log.info("Read Magic wrong. pointer: {}",Preparer.Pointer);
 				return WRONG;
@@ -100,8 +102,8 @@ public class ChainParser {
 				
 			}else if(blockLength == WAIT_MORE) {
 				System.out.print(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
-				System.out.println(" Waiting 30 seconds. pointer: "+Preparer.Pointer);
-				TimeUnit.SECONDS.sleep(30);
+				System.out.println(" Waiting for new block. pointer: "+Preparer.Pointer);
+				ParseTools.waitForNewItemInFile(Preparer.Path+Preparer.CurrentFile);
 				fis.close();
 				fis = new FileInputStream(file);
 				fis.skip(Preparer.Pointer);
@@ -117,7 +119,7 @@ public class ChainParser {
 			
 			long now = System.currentTimeMillis();
 			if( now - cdMakeTime > (1000*60*60*12)) {
-				Block bestBlock = ParseTools.getBestBlock(esClient);
+				Block bestBlock = getBestBlock(esClient);
 				
 				CdMaker cdMaker = new CdMaker();
 
@@ -263,7 +265,10 @@ public class ChainParser {
 			return;
 		}
 		writeOrphanMark(esClient, blockMark);
-		System.out.println("Orphan block." );
+		System.out.println("Orphan block"
+				+". Orphan: "+ Preparer.orphanList.size()
+				+". Fork: "+ Preparer.forkList.size()
+				+". Height: "+ Preparer.BestHeight);
 		return; 
 	}
 

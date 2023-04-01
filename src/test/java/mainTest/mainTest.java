@@ -5,7 +5,7 @@ package mainTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-        import tools.FchTools;
+        import fcTools.KeyTools;
 
 public class mainTest {
 	public static final int FILE_END = -1;
@@ -34,7 +34,7 @@ public class mainTest {
 //		System.out.print(hash);
 		String pk = "020a6be4ed72a3317bc8d148a2604a2b31c2d2c07405cacfcd175b68b9445ce42e";
 		
-		FchTools.pubKeyToAtomAddr(pk);
+		KeyTools.pubKeyToAtomAddr(pk);
 
 		
 		//date

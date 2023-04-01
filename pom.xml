@@ -4,9 +4,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fc.nobody</groupId>
   <artifactId>fchChain</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>fchChain</name>
-  <description>parse data from fch block chain to ElasticSearch.</description>
+    <packaging>pom</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+    <modules>
+        <module>../FC-SDK</module>
+    </modules>
+    <name>fchChain</name>
+  <description>parser data from fch block chain to ElasticSearch.</description>
 	<properties>
 		<java.version>18</java.version>
 	</properties>
@@ -111,8 +115,14 @@
             <version>4.4.0-m1</version>
             <scope>compile</scope>
         </dependency>
+		<dependency>
+			<groupId>fc.nobody</groupId>
+			<artifactId>FC-SDK</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
 
-    </dependencies>
+	</dependencies>
 	
 </project>
 

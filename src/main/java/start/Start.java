@@ -15,10 +15,9 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import data.Block;
 import esClient.StartClient;
-import parse.ChainParser;
-import parse.Preparer;
-import tools.OpReFileTools;
-import tools.ParseTools;
+import parser.ChainParser;
+import parser.Preparer;
+import parser.OpReFileTools;
 import writeEs.IndicesFCH;
 
 public class Start {
@@ -110,7 +109,7 @@ public class Start {
 	
 				if (restart.equals("y")) {	
 					
-					Block bestBlock = ParseTools.getBestBlock(esClient);
+					Block bestBlock = ChainParser.getBestBlock(esClient);
 					bestHeight = bestBlock.getHeight();
 					
 					System.out.println("Restarting from BestHeight: "+(bestHeight-1)+" ...");

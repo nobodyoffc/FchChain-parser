@@ -1,19 +1,5 @@
 package writeEs;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -22,9 +8,16 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.json.JsonData;
 import data.OpReturn;
-import parse.ChainParser;
-import tools.BytesTools;
-import tools.OpReFileTools;
+import fcTools.BytesTools;
+import parser.OpReFileTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import parser.ChainParser;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.*;
 
 public class RollBacker {
 	private static final Logger log = LoggerFactory.getLogger(RollBacker.class);
@@ -91,9 +84,7 @@ public class RollBacker {
 			log.error("Error when deleting in rollback",e);
 			e.printStackTrace();
 		}
-		
-		
-		
+
 		recordInOpReturnFile(lastHeight);
 		return true;
 	}
@@ -119,8 +110,7 @@ public class RollBacker {
 		Map<String, Long> stxoSumMap = aggsMaps.get("spend");
 		Map<String, Long> stxoCddMap = aggsMaps.get("cdd");
 		Map<String, Long> utxoCountMap = aggsMaps.get("utxoCount");
-		
-		
+
 		Set<String> ukset = utxoSumMap.keySet();
 		Set<String> skset = stxoSumMap.keySet();
 		Set<String> addrSet = new HashSet<String>();
@@ -137,7 +127,7 @@ public class RollBacker {
 			
 			if(utxoSumMap.get(addr)!=null) {
 				updateMap.put("balance", utxoSumMap.get(addr));
-				updateMap.put("utxo", utxoCountMap.get(addr));
+				updateMap.put("cash", utxoCountMap.get(addr));
 			}else {
 				updateMap.put("balance", 0);
 			}
@@ -212,8 +202,8 @@ public class RollBacker {
 		SearchResponse<Void> response = esClient.search(s->s
 				.index(IndicesFCH.CashIndex)
 				.query(q->q.bool(b->b
-						.must(m->m.range(r->r.field("spentHeight").lte(JsonData.of(lastHeight))))
-						.must(m1->m1.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight)))))
+						.should(m->m.range(r->r.field("spentHeight").lte(JsonData.of(lastHeight))))
+						.should(m1->m1.range(r1->r1.field("birthHeight").lte(JsonData.of(lastHeight)))))
 						)
 				.size(0)
 				.aggregations("addrFilterAggs",a->a

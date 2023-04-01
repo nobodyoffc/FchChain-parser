@@ -43,12 +43,12 @@ import data.Cash;
 import esClient.EsTools;
 import esClient.StartClient;
 import esClient.EsTools.MgetResult;
-import parse.Preparer;
+import parser.Preparer;
 import testDataMaker.BlockParts;
 import testDataMaker.DataMaker;
-import tools.BytesTools;
-import tools.FchTools;
-import tools.ParseTools;
+import fcTools.BytesTools;
+import fcTools.KeyTools;
+import fcTools.ParseTools;
 import writeEs.IndicesFCH;
 
 public class Tested {
@@ -221,8 +221,8 @@ public class Tested {
 
 	public void pkToETH() {
 		String unLockScript = "41fd184fce132dece2f23faaf394409df2feadff5c61d695a5406179c5af34e0bb7fafd48d0b1e819ccb96a3656fd972ba14ddf37ee1ffbb57de0751e711e164f2412102f62c5ec00bfbcaa71f4de400f54c6a1c1dad220f34246cf5561c292971641791";
-		String pk = FchTools.parsePkFromUnlockScript(unLockScript);
-		System.out.println(FchTools.pubKeyToEthAddr(pk));
+		String pk = KeyTools.parsePkFromUnlockScript(unLockScript);
+		System.out.println(KeyTools.pubKeyToEthAddr(pk));
 
 	}
 

@@ -50,7 +50,7 @@ keytool -importcert -file  [your ES path]/config/certs/http_ca.crt  -keystore [j
 
 	Without the certification you will meet an error of `javax.net.ssl.SSLHandshakeException: PKIX path building failed:...`
 	
-5. Run the jar file of FreeChain to parse blocks
+5. Run the jar file of FreeChain to parser blocks
 
 ## Parse Freecash Blockchain
 * config

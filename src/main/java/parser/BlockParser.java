@@ -1,4 +1,4 @@
-package parse;
+package parser;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -11,11 +11,11 @@ import data.OpReturn;
 import data.Tx;
 import data.TxHas;
 import data.Cash;
-import tools.BytesTools;
-import tools.FchTools;
-import tools.Hash;
-import tools.ParseTools;
-import tools.ParseTools.VarintResult;
+import fcTools.BytesTools;
+import fcTools.KeyTools;
+import fcTools.Hash;
+import fcTools.ParseTools;
+import fcTools.ParseTools.VarintResult;
 
 public class BlockParser {
 	public ReadyBlock parseBlock(byte[] blockBytes, BlockMark blockMark) throws IOException {
@@ -260,7 +260,7 @@ public class BlockParser {
 				out.setType("P2PKH");
 				out.setLockScript(BytesTools.bytesToHexStringBE(bScript));
 				byte[] hash160Bytes = Arrays.copyOfRange(bScript, 3, 23);
-				out.setAddr(FchTools.hash160ToFCHAddr(hash160Bytes));
+				out.setAddr(KeyTools.hash160ToFCHAddr(hash160Bytes));
 				break;
 			case OP_RETURN:
 				out.setType("OP_RETURN");
@@ -280,7 +280,7 @@ public class BlockParser {
 				out.setType("P2SH");
 				out.setLockScript(BytesTools.bytesToHexStringBE(bScript));
 				byte[] hash160Bytes1 = Arrays.copyOfRange(bScript, 2, 22);
-				out.setAddr(FchTools.hash160ToMultiAddr(hash160Bytes1));
+				out.setAddr(KeyTools.hash160ToMultiAddr(hash160Bytes1));
 				break;
 			default:
 				out.setType("Unknown");

@@ -1,13 +1,13 @@
-package tools;
+package parser;
+
+import data.OpReturn;
+import fcTools.BytesTools;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import data.OpReturn;
-import parse.ChainParser;
 
 public class OpReFileTools {
 
